@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Kharcha Tracker</title>
+<meta name="theme-color" content="#121018" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Kharcha" />
+<style>
+  :root{
+    --bg:#F5F3FA; --card:#ffffff; --border:#E7E3F3; --border2:#EFEBFA; --ink:#211D2E;
+    --muted:#756F8C; --accent:#7C3AED; --accent-soft:#7C3AED1c; --input-bg:#FAF9FF;
+    --track:#E7E3F3; --nav-bg:#211D2E; --nav-muted:#8C86A3; --shadow: 0 1px 3px rgba(33,29,46,.08);
+    --green:#16A34A; --red:#DC2626; --gradient: linear-gradient(135deg,#7C3AED,#F97316);
+  }
+  body.dark{
+    --bg:#121018; --card:#1C1928; --border:#2C2840; --border2:#252235; --ink:#F1EEF9;
+    --muted:#9D97B3; --accent:#A78BFA; --accent-soft:#A78BFA2b; --input-bg:#191624;
+    --track:#2C2840; --nav-bg:#15121F; --nav-muted:#746F8C; --shadow: 0 4px 16px rgba(0,0,0,.4);
+    --green:#34D399; --red:#F87171; --gradient: linear-gradient(135deg,#8B5CF6,#F97316);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  svg.ic { display:block; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--ink);
+    padding-bottom: 76px; transition: background .2s ease, color .2s ease;
+    overflow-x: hidden;
+  }
+  #app { max-width: 480px; margin: 0 auto; position: relative; min-height: 100vh; }
+  header { padding: 16px 18px 12px; position: relative; display:flex; align-items:flex-start; gap:12px; }
+  .icon-btn-round { background: var(--card); border:1px solid var(--border); border-radius:12px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; color:var(--ink); transition:transform .12s ease; }
+  .icon-btn-round:active { transform: scale(0.9); }
+  .eyebrow { font-size: 11px; color: var(--accent); letter-spacing: 1.5px; font-weight:600; text-transform:uppercase; }
+  h1 { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 20px; font-weight: 700; display: inline; margin-left: 7px; }
+  .subtitle { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .khata-pill { display:inline-flex; align-items:center; gap:5px; background:var(--card); border:1px solid var(--border); color:var(--ink); font-size:11.5px; font-weight:700; padding:5px 10px; border-radius:20px; margin-top:8px; cursor:pointer; }
+  main { padding: 0 16px; }
+  .install-banner { display:none; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--accent); color:#fff; padding:10px 14px; border-radius:10px; margin-bottom:14px; font-size:13px; }
+  .install-banner button { background:var(--ink); color:var(--bg); border:none; border-radius:8px; padding:7px 12px; font-size:12.5px; font-weight:700; }
+  .reminder-banner { display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid #DC262655; border-left:3px solid #DC2626; border-radius:10px; padding:11px 13px; margin-bottom:14px; font-size:12px; color:var(--ink); animation: fadeSlideIn .25s ease; }
+  .reminder-banner b { display:block; font-size:13px; margin-bottom:1px; }
+  .streak-badge { display:inline-flex; align-items:center; gap:6px; background:var(--accent-soft); color:var(--accent); font-size:12px; font-weight:700; padding:6px 12px; border-radius:20px; margin-bottom:12px; animation: fadeSlideIn .3s ease; }
+  .insight-line { font-size:12px; color:var(--muted); background:var(--card); border:1px solid var(--border); border-radius:10px; padding:9px 12px; margin-bottom:14px; animation: fadeSlideIn .3s ease; }
+  .section-title { font-size: 13px; font-weight: 700; margin: 18px 0 9px; color:var(--ink); text-transform:uppercase; letter-spacing:.4px; display:flex; align-items:center; justify-content:space-between; }
+  .section-title .st-action { font-size:11.5px; font-weight:700; color:var(--accent); border:none; background:none; cursor:pointer; text-transform:none; }
+  .search-wrap { position:relative; margin-bottom:10px; }
+  .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--muted); }
+  .search-wrap input { width:100%; border:1px solid var(--border); border-radius:10px; padding:9px 12px 9px 34px; font-size:13.5px; background:var(--card); color:var(--ink); }
+  .month-row { display:flex; align-items:center; gap:8px; margin-bottom:14px; color:var(--muted); }
+  select, input, .chip, button { font-family: inherit; }
+  select { border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-size:13px; background:var(--card); font-weight:600; color:var(--ink); }
+  .total-card { background:var(--ink); border-radius:16px; padding:18px 20px; margin-bottom:14px; animation: fadeSlideIn .25s ease; }
+  body.dark .total-card { background:linear-gradient(135deg,#241F38,#1C1830); border:1px solid var(--border); }
+  .total-label { color:#C7C2DB; font-size:12px; }
+  body.dark .total-label { color: var(--muted); }
+  .total-amount { color:#F1EEF9; font-size:30px; font-family: ui-sans-serif, system-ui, sans-serif; font-weight:700; margin-top:2px; letter-spacing:-.5px; }
+  body.dark .total-amount { color: var(--ink); }
+  .top-badge { margin-top:10px; display:inline-block; background:rgba(255,255,255,.12); color:#E9D8FD; font-size:11.5px; padding:4px 10px; border-radius:20px; }
+  .hscroll { display:flex; gap:9px; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:4px; margin-bottom:6px; -webkit-overflow-scrolling:touch; }
+  .hscroll::-webkit-scrollbar { height:0; }
+  .cat-card { scroll-snap-align:start; flex-shrink:0; width:128px; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px; box-shadow:var(--shadow); animation: fadeSlideIn .25s ease; }
+  .cat-card .cci { width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+  .cat-card .ccname { font-size:11.5px; font-weight:700; }
+  .cat-card .ccamt { font-family:Consolas,monospace; font-weight:700; font-size:14.5px; margin-top:3px; }
+  .cat-card .ccnote { font-size:9.5px; color:var(--muted); margin-top:2px; }
+  .cat-card .ccwarn { font-size:9.5px; color:#C0392B; font-weight:700; margin-top:2px; }
+  .budget-btn { background:none; border:none; padding:4px; cursor:pointer; opacity:.55; color:var(--ink); }
+  .bartrack { height:5px; background:var(--track); border-radius:4px; overflow:hidden; margin-top:3px; }
+  .barfill { height:100%; border-radius:4px; transition: width .5s ease; }
+  .subrow { display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px; }
+  .subrow span:last-child { font-family: Consolas, monospace; }
+  .empty-note { font-size:13px; color:var(--muted); padding:16px 4px; text-align:center; }
+  .tx-wrap { position:relative; overflow:hidden; border-radius:10px; margin-bottom:7px; }
+  .tx-delete-btn { position:absolute; top:0; bottom:0; right:0; width:84px; background:#DC2626; border:none; color:#fff; font-size:12px; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; }
+  .tx-row { display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--border2); border-radius:10px; padding:9px 10px; position:relative; touch-action: pan-y; animation: fadeSlideIn .25s ease; z-index:1; }
+  .tx-row.selected { outline:2px solid var(--accent); }
+  .tx-check { width:18px; height:18px; border-radius:5px; border:1.5px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .tx-check.checked { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .tx-dot { width:8px; height:8px; border-radius:4px; flex-shrink:0; }
+  .tx-title { font-size:13px; font-weight:600; }
+  .tx-sub { font-size:10.5px; color:var(--muted); }
+  .tx-amt { font-family: Consolas, monospace; font-weight:700; margin-left:auto; margin-right:4px; font-size:13.5px; }
+  .icon-btn { background:none; border:none; padding:4px; cursor:pointer; color:var(--muted); display:flex; }
+  .main-card { scroll-snap-align:start; flex-shrink:0; width:106px; display:flex; flex-direction:column; align-items:center; padding:13px 6px; border-radius:12px; border:1.5px solid var(--border); background:var(--card); cursor:pointer; font-size:11px; font-weight:600; color:var(--ink); transition: transform .1s ease; text-align:center; }
+  .main-card:active { transform: scale(0.95); }
+  .main-card .ic-wrap { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:6px; }
+  .tx-row .ic-wrap { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .sub-wrap { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:6px; }
+  .chip { font-size:12px; padding:7px 12px; border-radius:20px; border:1.5px solid var(--border); background:var(--card); color:var(--ink); cursor:pointer; transition: transform .1s ease; }
+  .chip:active { transform: scale(0.94); }
+  .chip.active { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .suggest-chip { display:inline-flex; align-items:center; gap:6px; background:var(--accent-soft); color:var(--accent); border:1px dashed var(--accent); border-radius:20px; padding:6px 12px; font-size:11.5px; margin-top:8px; cursor:pointer; animation: fadeSlideIn .2s ease; }
+  .form-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; margin-top:12px; }
+  label.field-label { font-size:11.5px; color:var(--muted); display:block; margin-bottom:5px; margin-top:12px; font-weight:600; }
+  .field-label:first-child { margin-top: 0; }
+  input[type=text], input[type=number], input[type=date], input[type=tel] { width:100%; border:1px solid var(--border); border-radius:9px; padding:10px 12px; font-size:14px; background:var(--input-bg); color:var(--ink); }
+  .save-btn { width:100%; margin-top:18px; background:var(--gradient); color:#fff; border:none; border-radius:12px; padding:13px; font-size:14px; font-weight:700; cursor:pointer; transition: transform .1s ease; box-shadow: 0 4px 14px rgba(124,58,237,.25); }
+  .save-btn:active { transform: scale(0.97); }
+  .save-btn.success { background:var(--green); color:#fff; animation: pulseGood .5s ease; }
+  .save-btn.danger { background:var(--red); color:#fff; box-shadow:none; }
+  .save-btn.small { margin-top:8px; padding:9px; font-size:12.5px; }
+  .pick-contact-btn { width:100%; margin-top:8px; background:var(--accent-soft); color:var(--accent); border:1px dashed var(--accent); border-radius:9px; padding:9px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px; }
+  .loan-summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .loan-summary-card { background:var(--card); border:1.5px solid; border-radius:12px; padding:12px 14px; box-shadow:var(--shadow); }
+  .loan-summary-label { font-size:10.5px; color:var(--muted); font-weight:600; }
+  .loan-summary-amt { font-size:18px; font-weight:700; font-family: ui-sans-serif, system-ui, sans-serif; margin-top:2px; }
+  .contact-row { display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:12px; margin-bottom:8px; cursor:pointer; box-shadow:var(--shadow); animation: fadeSlideIn .25s ease; }
+  .contact-avatar { width:36px; height:36px; border-radius:12px; background:var(--gradient); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
+  .contact-name { font-size:13.5px; font-weight:700; }
+  .contact-meta { font-size:10.5px; color:var(--muted); }
+  .contact-balance { margin-left:auto; text-align:right; }
+  .contact-balance .amt { font-family:Consolas,monospace; font-weight:700; font-size:13.5px; }
+  .contact-balance .lbl { font-size:9px; font-weight:700; }
+  .back-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .back-btn { background:var(--card); border:1px solid var(--border); border-radius:20px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; color:var(--ink); }
+  .contact-header-card { background:var(--ink); border-radius:18px; padding:26px 20px 20px; margin-bottom:14px; text-align:center; }
+  body.dark .contact-header-card { background:linear-gradient(135deg,#241F38,#1C1830); border:1px solid var(--border); }
+  .contact-avatar-lg { width:60px; height:60px; border-radius:50%; background:var(--gradient); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; margin:0 auto 12px; box-shadow:0 4px 14px rgba(139,92,246,.35); }
+  .contact-header-name { color:#F1EEF9; font-size:17px; font-weight:700; font-family: ui-sans-serif, system-ui, sans-serif; }
+  body.dark .contact-header-name { color: var(--ink); }
+  .contact-header-lbl-top { font-size:12px; color:#C7C2DB; margin-top:10px; }
+  body.dark .contact-header-lbl-top { color: var(--muted); }
+  .contact-header-bal { font-size:28px; font-weight:800; margin-top:2px; font-family: ui-sans-serif, system-ui, sans-serif; letter-spacing:-.5px; }
+  .contact-header-lbl { font-size:11px; color:#C7C2DB; margin-top:2px; }
+  body.dark .contact-header-lbl { color: var(--muted); }
+  .add-transaction-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--gradient); color:#fff; border:none; border-radius:11px; padding:12px; font-size:13.5px; font-weight:700; margin-top:16px; cursor:pointer; box-shadow:0 4px 14px rgba(124,58,237,.3); }
+  .wa-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:#25D366; color:#fff; border:none; border-radius:11px; padding:11px; font-size:13px; font-weight:700; margin-top:10px; cursor:pointer; }
+  .khata-summary-footer { display:flex; margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,.12); }
+  .khata-summary-footer .ksf-item { flex:1; text-align:center; }
+  .khata-summary-footer .ksf-label { font-size:10px; color:#C7C2DB; }
+  body.dark .khata-summary-footer .ksf-label { color: var(--muted); }
+  .khata-summary-footer .ksf-val { font-size:13.5px; font-weight:700; margin-top:2px; color:#F1EEF9; }
+  body.dark .khata-summary-footer .ksf-val { color: var(--ink); }
+  .entry-kind-tag { font-size:9px; font-weight:700; padding:2px 7px; border-radius:6px; flex-shrink:0; }
+  .running-bal { font-size:9.5px; color:var(--muted); margin-top:2px; }
+  .type-toggle { display:flex; gap:8px; margin-bottom:6px; }
+  .type-toggle button { flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--border); background:var(--card); color:var(--ink); font-weight:700; font-size:12.5px; cursor:pointer; }
+  .type-toggle button.active-give { background:var(--green); color:#fff; border-color:var(--green); }
+  .type-toggle button.active-got { background:var(--red); color:#fff; border-color:var(--red); }
+  .upcoming-row { display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--border2); border-radius:10px; padding:10px; margin-bottom:8px; }
+  .upcoming-badge { width:36px; height:36px; border-radius:10px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:10.5px; flex-shrink:0; text-align:center; line-height:1.1; }
+  .upcoming-badge.urgent { background:#DC262622; color:#DC2626; }
+
+  .period-tabs { display:flex; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:4px; margin-bottom:16px; }
+  .period-tab { flex:1; background:none; border:none; padding:9px 4px; font-size:12.5px; font-weight:700; color:var(--muted); border-radius:9px; cursor:pointer; }
+  .period-tab.active { background:var(--gradient); color:#fff; }
+  .summary-row-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:8px; }
+  .summary-mini-card { background:var(--card); border:1.5px solid; border-radius:12px; padding:11px 8px; text-align:center; }
+  .smc-label { font-size:9.5px; font-weight:700; margin-bottom:4px; }
+  .smc-val { font-size:14px; font-weight:800; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .donut-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; display:flex; align-items:center; gap:16px; }
+  .donut-wrap { flex-shrink:0; }
+  .donut-legend { flex:1; display:flex; flex-direction:column; gap:9px; min-width:0; }
+  .legend-row { display:flex; align-items:center; gap:7px; font-size:11.5px; }
+  .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .legend-name { flex:1; color:var(--ink); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .legend-pct { color:var(--muted); width:32px; text-align:right; }
+  .legend-amt { color:var(--ink); font-weight:700; font-family:Consolas,monospace; width:62px; text-align:right; }
+  .trend-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px 14px 10px; }
+  .trend-legend { display:flex; gap:16px; margin-bottom:8px; font-size:11px; color:var(--muted); }
+  .trend-legend span { display:inline-flex; align-items:center; gap:5px; }
+  nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:var(--nav-bg); display:flex; justify-content:space-around; padding:8px 0 12px; border-top-left-radius:18px; border-top-right-radius:18px; }
+  nav button { background:none; border:none; display:flex; flex-direction:column; align-items:center; color:var(--nav-muted); font-size:10px; cursor:pointer; position:relative; transition: transform .1s ease; flex:1; gap:3px; }
+  nav button:active { transform: scale(0.9); }
+  nav button.active { color:var(--accent); font-weight:700; }
+  #navAdd .navic { background:var(--gradient); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-top:-22px; box-shadow:0 4px 14px rgba(139,92,246,.45); border:3px solid var(--nav-bg); color:#fff; }
+  #navAdd.active .navic, #navAdd .navic { color:#fff; }
+  .hidden { display:none !important; }
+
+  .drawer-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:40; opacity:0; pointer-events:none; transition:opacity .22s ease; }
+  .drawer-overlay.open { opacity:1; pointer-events:auto; }
+  .drawer-panel { position:fixed; top:0; left:0; bottom:0; width:84%; max-width:360px; background:var(--bg); z-index:41; transform:translateX(-105%); transition:transform .25s ease; overflow-y:auto; }
+  .drawer-panel.open { transform:translateX(0); }
+  .drawer-header { background:linear-gradient(135deg,#2A2140,#1C1830); padding:24px 20px 18px; position:relative; }
+  body.dark .drawer-header { background:linear-gradient(135deg,#2A2140,#1C1830); }
+  .drawer-close { position:absolute; top:16px; right:16px; background:rgba(255,255,255,.15); border:none; color:#fff; width:30px; height:30px; border-radius:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .drawer-avatar-wrap { display:flex; align-items:center; gap:12px; }
+  .drawer-avatar { width:54px; height:54px; border-radius:50%; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; overflow:hidden; cursor:pointer; border:2px solid rgba(255,255,255,.3); flex-shrink:0; }
+  .drawer-avatar img { width:100%; height:100%; object-fit:cover; }
+  .drawer-name { color:#F1EEF9; font-size:15.5px; font-weight:700; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .drawer-name-edit { font-size:10.5px; color:#C7C2DB; cursor:pointer; margin-top:3px; display:flex; align-items:center; gap:4px; }
+  .drawer-body { padding:12px 16px 30px; }
+  .drawer-item { display:flex; align-items:center; gap:12px; padding:12px 4px; cursor:pointer; border-bottom:1px solid var(--border2); }
+  .drawer-icon { width:20px; flex-shrink:0; color:var(--ink); display:flex; }
+  .drawer-label { font-size:13px; font-weight:600; flex:1; }
+  .drawer-sub { font-size:10px; color:var(--muted); margin-top:1px; }
+  .toggle-switch { width:38px; height:22px; border-radius:11px; background:var(--track); position:relative; flex-shrink:0; }
+  .toggle-switch.on { background:var(--accent); }
+  .toggle-switch .dot { position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .16s ease; }
+  .toggle-switch.on .dot { left:18px; }
+  .drawer-subpanel { padding:6px 4px 14px; }
+  .lang-chip-row { display:flex; flex-wrap:wrap; gap:8px; padding:6px 4px; }
+  .lang-chip { font-size:12px; padding:7px 12px; border-radius:20px; border:1.5px solid var(--border); background:var(--card); color:var(--ink); cursor:pointer; }
+  .lang-chip.active { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+
+  .khata-panel-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50; opacity:0; pointer-events:none; transition:opacity .2s ease; }
+  .khata-panel-overlay.open { opacity:1; pointer-events:auto; }
+  .khata-panel { position:fixed; left:8%; right:8%; top:14%; max-width:400px; margin:0 auto; background:var(--bg); border-radius:16px; z-index:51; opacity:0; transform:translateY(-12px) scale(.97); pointer-events:none; transition:all .2s ease; overflow:hidden; }
+  .khata-panel.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+  .khata-panel-header { background:var(--ink); color:var(--bg); padding:15px 18px; font-weight:700; font-family: ui-sans-serif, system-ui, sans-serif; font-size:15.5px; }
+  body.dark .khata-panel-header { background:#241F38; }
+  .khata-panel-body { padding:14px; max-height:60vh; overflow-y:auto; }
+  .khata-item { display:flex; align-items:center; gap:10px; padding:11px 10px; border-radius:10px; cursor:pointer; margin-bottom:6px; border:1.5px solid var(--border2); }
+  .khata-item.current { border-color:var(--accent); background:var(--accent-soft); }
+  .khata-item-name { font-size:13px; font-weight:700; flex:1; }
+  .khata-item-tag { font-size:9.5px; color:var(--accent); font-weight:700; }
+  .create-khata-btn { width:100%; background:var(--accent-soft); color:var(--accent); border:1.5px dashed var(--accent); border-radius:10px; padding:12px; font-size:12.5px; font-weight:700; cursor:pointer; margin-bottom:12px; }
+
+  #lockScreen { position:fixed; inset:0; background:var(--ink); z-index:100; display:none; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+  #lockScreen.show { display:flex; }
+  .lock-icon-wrap { width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; color:var(--bg); margin-bottom:14px; }
+  .lock-title { color:var(--bg); font-size:15.5px; font-weight:700; margin-bottom:4px; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .lock-sub { color:#8C86A3; font-size:11.5px; margin-bottom:18px; }
+  .lock-error { color:#F87171; font-size:11.5px; margin-top:10px; min-height:16px; }
+  .lock-dots { display:flex; gap:14px; }
+  .lock-dot { width:15px; height:15px; border-radius:50%; border:2px solid #8C86A3; }
+  .lock-dot.filled { background:#A78BFA; border-color:#A78BFA; }
+  .lock-keypad { display:grid; grid-template-columns:repeat(3,62px); gap:12px; margin-top:22px; }
+  .lock-key { width:62px; height:62px; border-radius:50%; background:rgba(255,255,255,.07); color:var(--bg); font-size:19px; font-weight:600; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .lock-key:active { background:rgba(255,255,255,.16); }
+  .biometric-btn { margin-top:22px; display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.1); color:var(--bg); border:none; border-radius:22px; padding:10px 18px; font-size:12.5px; font-weight:700; cursor:pointer; }
+  @keyframes fadeSlideIn { from { opacity:0; transform: translateY(5px); } to { opacity:1; transform: translateY(0); } }
+  @keyframes pulseGood { 0%{ transform:scale(1); } 40%{ transform:scale(1.03); } 100%{ transform:scale(1); } }
+  @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-8px);} 75%{transform:translateX(8px);} }
+  .shake { animation: shake .35s ease; }
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-icon-wrap" id="lockIconWrap"></div>
+  <div class="lock-title">Enter your PIN</div>
+  <div class="lock-sub">Only you can open this app</div>
+  <div class="lock-dots" id="lockDots"></div>
+  <div class="lock-error" id="lockError"></div>
+  <div class="lock-keypad" id="lockKeypad"></div>
+  <button class="biometric-btn hidden" id="bioUnlockBtn"></button>
+</div>
+
+<div class="khata-panel-overlay" id="khataOverlay"></div>
+<div class="khata-panel" id="khataPanel">
+  <div class="khata-panel-header" id="khataPanelTitle">Switch Khata</div>
+  <div class="khata-panel-body" id="khataPanelBody"></div>
+</div>
+
+<div id="app">
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <div class="drawer-panel" id="drawerPanel">
+    <div class="drawer-header">
+      <button class="drawer-close" id="drawerCloseBtn"></button>
+      <div class="drawer-avatar-wrap">
+        <div class="drawer-avatar" id="drawerAvatar"></div>
+        <div>
+          <div class="drawer-name" id="drawerNameText">You</div>
+          <div class="drawer-name-edit" id="drawerNameEdit">Edit name & photo</div>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </div>
+
+  <header>
+    <button class="icon-btn-round" id="hamburgerBtn"></button>
+    <div>
+      <span class="eyebrow" id="txtEyebrow">LEDGER BOOK</span><h1 id="txtTitle">Home Expense Ledger</h1>
+      <p class="subtitle" id="txtSubtitle">Household, Personal, Shop and Vehicle</p>
+      <div class="khata-pill" id="khataPill"><span id="khataPillIcon"></span><span id="khataPillName">My Khata</span></div>
+    </div>
+  </header>
+
+  <main>
+    <div class="install-banner" id="installBanner">
+      <span>Install this as an app on your phone</span>
+      <button id="installBtn">Install</button>
+    </div>
+
+    <div id="dashboardTab"></div>
+    <div id="reportsTab" class="hidden"></div>
+    <div id="addTab" class="hidden"></div>
+    <div id="udharTab" class="hidden"></div>
+  </main>
+
+  <nav>
+    <button id="navDashboard" class="active"><span class="navic" id="navHomeIc"></span><span id="navHomeLbl">Home</span></button>
+    <button id="navReports"><span class="navic" id="navReportsIc"></span><span id="navReportsLbl">Reports</span></button>
+    <button id="navAdd"><span class="navic" id="navAddIc"></span><span id="navAddLbl">Add</span></button>
+    <button id="navUdhar"><span class="navic" id="navLoansIc"></span><span id="navLoansLbl">Loans</span></button>
+  </nav>
+</div>
+
+<input type="file" id="photoFileInput" accept="image/*" style="display:none" />
+<input type="file" id="importFileInput" accept="application/json" style="display:none" />
+
+<script>
+/* ================= ICONS (inline SVG, minimal line style) ================= */
+const ICONS = {
+  home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  wallet: '<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.4"/>',
+  menu: '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+  close: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+  lock: '<rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  chevronRight: '<polyline points="9 18 15 12 9 6"/>',
+  chevronDown: '<polyline points="6 9 12 15 18 9"/>',
+  search: '<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/>',
+  fingerprint: '<path d="M12 3a6 6 0 0 0-6 6v2c0 4-2 6-2 6"/><path d="M12 3a6 6 0 0 1 6 6v2c0 1.2.15 2.2.4 3"/><path d="M8 9a4 4 0 0 1 8 0v2c0 4.5 2 7 2 7"/><path d="M12 9a2.5 2.5 0 0 1 2.5 2.5c0 4 1.5 6.5 1.5 6.5"/><path d="M9.5 20s-1.5-2.5-1.5-6.5A2.5 2.5 0 0 1 12 11"/>',
+  chat: '<path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 8.5-8.5h.4a8.4 8.4 0 0 1 8 8v.5z"/>',
+  book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a13.5 13.5 0 0 1 3.5 9 13.5 13.5 0 0 1-3.5 9 13.5 13.5 0 0 1-3.5-9A13.5 13.5 0 0 1 12 3z"/>',
+  moon: '<path d="M20 13.2A8.4 8.4 0 1 1 10.8 4 6.5 6.5 0 0 0 20 13.2z"/>',
+  upload: '<path d="M20 15v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  download: '<path d="M20 15v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  alertTriangle: '<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/>',
+  info: '<circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><circle cx="12" cy="8" r="0.6" fill="currentColor" stroke="none"/>',
+  arrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  shop: '<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9"/><path d="M9 21v-8h6v8"/>',
+  bike: '<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6l-3 8h6M12 6h3l2 5"/><path d="M9 17.5h6"/>',
+  sparkle: '<path d="M12 3l1.7 4.6L18 9l-4.3 1.4L12 15l-1.7-4.6L6 9l4.3-1.4L12 3z"/>',
+  pieChart: '<path d="M21.2 15a9 9 0 1 1-9.2-8.9"/><path d="M12 12L21.2 15A9 9 0 0 0 12 3v9z"/>',
+  trendingUp: '<polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/>',
+  gift: '<rect x="3" y="8" width="18" height="4"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8"/><path d="M16.5 8a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8"/>',
+  pieChart: '<path d="M21.2 15a9 9 0 1 1-9.2-9.2"/><path d="M12 2a10 10 0 0 1 10 10h-10z"/>',
+  trendUp: '<polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/>',
+  trendDown: '<polyline points="3 7 9 13 13 9 21 18"/><polyline points="15 18 21 18 21 12"/>',
+  arrowUpCircle: '<circle cx="12" cy="12" r="9"/><polyline points="8 12 12 8 16 12"/><line x1="12" y1="16" x2="12" y2="8"/>',
+  arrowDownCircle: '<circle cx="12" cy="12" r="9"/><polyline points="16 12 12 16 8 12"/><line x1="12" y1="8" x2="12" y2="16"/>'
+};
+function ic(name, size, strokeW){
+  size = size || 18; strokeW = strokeW || 2;
+  return '<svg class="ic" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+strokeW+'" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||"")+'</svg>';
+}
+
+/* ================= TRANSLATIONS ================= */
+const T = {
+  en: {
+    app_title:"Home Expense Ledger", app_subtitle:"Household, Personal, Shop and Vehicle", eyebrow:"LEDGER BOOK",
+    nav_home:"Home", nav_reports:"Reports", nav_add:"Add", nav_loans:"Loans",
+    reports_title:"Reports", period_weekly:"Weekly", period_monthly:"Monthly", period_yearly:"Yearly",
+    total_income:"Total Income", total_expense:"Total Expense", total_savings:"Total Savings",
+    expenses_overview:"Expenses Overview", monthly_trend:"Monthly Trend",
+    tap_to_change_period:"Tap to change period", no_data_period:"No data for this period yet.",
+    add_income:"Add Income", income_source:"Source", income_saved:"Income Saved",
+    expense_tab:"Expense", income_tab:"Income",
+    inc_salary:"Salary", inc_business:"Business", inc_freelance:"Freelance / Side Income",
+    inc_interest:"Interest / Investment Return", inc_gift:"Gift", inc_other:"Other",
+    recent_income:"Recent Income",
+    by_category:"By Category", where_money:"Where the Money Goes Most", entries_title:"This Month's Entries",
+    select_btn:"Select", cancel_btn:"Cancel", no_entries:"No entries yet. Start by tapping \"Add\".",
+    entries_tip:"Change the Date field when adding an expense to log a past or future entry.",
+    total_label:"Total Expense This Month", highest_label:"Highest",
+    streak_text:"day logging streak — keep it up!",
+    what_expense:"What Is This Expense For?", choose_type:"Choose Type",
+    amount_label:"Amount", date_label:"Date (change to log a past or future expense)",
+    note_label:"Note (optional)", note_ph:"e.g. from the vegetable vendor",
+    save_entry:"Save Entry", saved_text:"Saved", suggest_text:"Looks like", tap_to_use:"tap to use",
+    loan_ledger:"Loan Ledger", will_get:"You Will Get", will_give:"You Will Give",
+    add_contact:"Add New Contact", name_ph:"Name (e.g. Rahul, HDFC Bank)",
+    phone_label:"Phone (optional, for WhatsApp)", phone_ph:"e.g. 9876543210",
+    pick_contacts:"Pick from Phone Contacts", add_contact_btn:"Add Contact",
+    all_contacts:"All Contacts", no_contacts:"No contacts yet. Add someone above to start a khata.",
+    search_contacts_ph:"Search contacts by name...", search_entries_ph:"Search this month's entries...",
+    no_search_results:"No matches found.",
+    confirm_delete_entry:"Delete this entry? This can't be undone.",
+    confirm_delete_multi:"Delete {n} selected entries? This can't be undone.",
+    entries_word:"entries", will_get_short:"WILL GET", will_give_short:"WILL GIVE", settled:"SETTLED",
+    khata_of:"'s Khata", they_pay_you:"They will pay you", you_pay_them:"You will pay them", all_settled:"All settled",
+    send_whatsapp:"Send WhatsApp Reminder", you_gave:"You Gave", you_got:"You Got",
+    add_transaction:"Add Transaction", ksf_total:"Transactions",
+    history_title:"History", no_entries_contact:"No entries yet with", balance_after:"Balance after",
+    dark_mode:"Dark Mode", app_lock:"App Lock", lock_on:"On — PIN required to open", lock_off:"Off",
+    upcoming_title:"Upcoming Payments & EMIs", scheduled:"scheduled",
+    export_data:"Export / Backup Data", export_sub:"Save a copy as a file",
+    restore_data:"Restore Data", restore_sub:"Load a saved backup",
+    clear_data:"Clear All Data", clear_sub:"Remove everything from this phone",
+    about_sub:"All data stays only on this device.", language_label:"Language",
+    title_field:"Title", due_date:"Due Date", add_upcoming:"Add Upcoming Payment",
+    switch_khata:"Switch Khata", create_khata:"+ Create New Khata", current_khata:"CURRENT",
+    trend_up:"You have spent", trend_up2:"more than last month", trend_down:"You have spent", trend_down2:"less than last month",
+    reminder_due:"due", cat_ghar:"Household", cat_personal:"Personal", cat_dukaan:"Shop", cat_vehicle:"Vehicle",
+    edit_photo:"Edit name & photo", you:"You", delete_word:"Delete",
+    fingerprint_unlock:"Use Fingerprint", enable_fingerprint:"Enable Fingerprint Unlock", fingerprint_on:"Fingerprint unlock is on",
+    turn_on_lock:"Turn On App Lock", turn_off_lock:"Turn Off App Lock", lock_is_on:"App Lock is currently ON."
+  },
+  hi: {
+    app_title:"घर खर्च बही", app_subtitle:"घर, पर्सनल, दुकान और गाड़ी", eyebrow:"बही खाता",
+    nav_home:"होम", nav_reports:"रिपोर्ट", nav_add:"जोड़ें", nav_loans:"उधार",
+    reports_title:"रिपोर्ट", period_weekly:"साप्ताहिक", period_monthly:"मासिक", period_yearly:"वार्षिक",
+    total_income:"कुल आय", total_expense:"कुल खर्च", total_savings:"कुल बचत",
+    expenses_overview:"खर्च का विवरण", monthly_trend:"मासिक ट्रेंड",
+    tap_to_change_period:"अवधि बदलने के लिए टैप करें", no_data_period:"इस अवधि में अभी कोई डेटा नहीं है।",
+    add_income:"आय जोड़ें", income_source:"स्रोत", income_saved:"आय सेव हो गई",
+    expense_tab:"खर्च", income_tab:"आय",
+    inc_salary:"सैलरी", inc_business:"बिज़नेस", inc_freelance:"फ्रीलांस / साइड इनकम",
+    inc_interest:"ब्याज / निवेश रिटर्न", inc_gift:"गिफ्ट", inc_other:"अन्य",
+    recent_income:"हाल की आय",
+    by_category:"श्रेणी अनुसार", where_money:"सबसे ज़्यादा खर्च कहां हो रहा है", entries_title:"इस महीने की एंट्रीज़",
+    select_btn:"चुनें", cancel_btn:"रद्द करें", no_entries:"अभी कोई एंट्री नहीं है। \"जोड़ें\" पर टैप करें।",
+    entries_tip:"पुरानी या आने वाली तारीख की एंट्री जोड़ने के लिए डेट बदलें।",
+    total_label:"इस महीने का कुल खर्च", highest_label:"सबसे ज़्यादा",
+    streak_text:"दिन से लगातार एंट्री कर रहे हैं — जारी रखें!",
+    what_expense:"यह खर्च किस चीज़ का है?", choose_type:"प्रकार चुनें",
+    amount_label:"राशि", date_label:"तारीख (पुरानी या आने वाली एंट्री के लिए बदलें)",
+    note_label:"नोट (वैकल्पिक)", note_ph:"जैसे: सब्ज़ी वाले से",
+    save_entry:"एंट्री सेव करें", saved_text:"सेव हो गया", suggest_text:"लगता है यह है", tap_to_use:"इस्तेमाल करने के लिए टैप करें",
+    loan_ledger:"उधार खाता", will_get:"आपको मिलेगा", will_give:"आपको देना होगा",
+    add_contact:"नया कॉन्टैक्ट जोड़ें", name_ph:"नाम (जैसे: राहुल, HDFC बैंक)",
+    phone_label:"फोन नंबर (वैकल्पिक, WhatsApp के लिए)", phone_ph:"जैसे: 9876543210",
+    pick_contacts:"फोन कॉन्टैक्ट्स से चुनें", add_contact_btn:"कॉन्टैक्ट जोड़ें",
+    all_contacts:"सभी कॉन्टैक्ट्स", no_contacts:"अभी कोई कॉन्टैक्ट नहीं है। खाता शुरू करने के लिए ऊपर किसी को जोड़ें।",
+    search_contacts_ph:"नाम से कॉन्टैक्ट खोजें...", search_entries_ph:"इस महीने की एंट्री खोजें...",
+    no_search_results:"कुछ नहीं मिला।",
+    confirm_delete_entry:"क्या यह एंट्री डिलीट करनी है? यह वापस नहीं होगा।",
+    confirm_delete_multi:"क्या चुनी गई {n} एंट्रीज़ डिलीट करनी हैं? यह वापस नहीं होगा।",
+    entries_word:"एंट्रीज़", will_get_short:"मिलेगा", will_give_short:"देना है", settled:"चुकता",
+    khata_of:" का खाता", they_pay_you:"वो आपको देंगे", you_pay_them:"आपको उन्हें देना है", all_settled:"पूरी तरह चुकता",
+    send_whatsapp:"WhatsApp पर याद दिलाएं", you_gave:"आपने दिया", you_got:"आपको मिला",
+    add_transaction:"ट्रांज़ैक्शन जोड़ें", ksf_total:"एंट्रीज़",
+    history_title:"हिस्ट्री", no_entries_contact:"अभी कोई एंट्री नहीं है", balance_after:"बाद का बैलेंस",
+    dark_mode:"डार्क मोड", app_lock:"ऐप लॉक", lock_on:"ऑन — खोलने के लिए PIN चाहिए", lock_off:"ऑफ",
+    upcoming_title:"आने वाले भुगतान और EMI", scheduled:"शेड्यूल्ड",
+    export_data:"डेटा एक्सपोर्ट / बैकअप करें", export_sub:"एक फाइल के रूप में कॉपी सेव करें",
+    restore_data:"डेटा वापस लाएं", restore_sub:"सेव किया हुआ बैकअप लोड करें",
+    clear_data:"सारा डेटा हटाएं", clear_sub:"इस फोन से सब कुछ हटा दें",
+    about_sub:"सारा डेटा सिर्फ इसी डिवाइस में रहता है।", language_label:"भाषा",
+    title_field:"शीर्षक", due_date:"देय तारीख", add_upcoming:"आने वाला भुगतान जोड़ें",
+    switch_khata:"खाता बदलें", create_khata:"+ नया खाता बनाएं", current_khata:"चालू",
+    trend_up:"आपने पिछले महीने से", trend_up2:"ज़्यादा खर्च किया है", trend_down:"आपने पिछले महीने से", trend_down2:"कम खर्च किया है",
+    reminder_due:"देय है", cat_ghar:"घर", cat_personal:"पर्सनल", cat_dukaan:"दुकान", cat_vehicle:"गाड़ी",
+    edit_photo:"नाम और फोटो बदलें", you:"आप", delete_word:"हटाएं",
+    fingerprint_unlock:"फिंगरप्रिंट इस्तेमाल करें", enable_fingerprint:"फिंगरप्रिंट अनलॉक चालू करें", fingerprint_on:"फिंगरप्रिंट अनलॉक चालू है",
+    turn_on_lock:"ऐप लॉक चालू करें", turn_off_lock:"ऐप लॉक बंद करें", lock_is_on:"ऐप लॉक अभी चालू है।"
+  }
+};
+const SUB_LABELS_HI = {
+  "Groceries / Rashan":"राशन / किराना", "Vegetables & Fruits":"सब्ज़ी और फल", "Milk / Dairy":"दूध / डेयरी",
+  "Gas Cylinder":"गैस सिलेंडर", "Electricity Bill":"बिजली का बिल", "Water Bill":"पानी का बिल",
+  "House Rent":"घर का किराया", "Maintenance":"मेंटेनेंस", "Internet / WiFi":"इंटरनेट / वाईफाई",
+  "Mobile Recharge":"मोबाइल रिचार्ज", "Cook / Maid Salary":"रसोइया / नौकरानी की सैलरी",
+  "Kids School Fees":"बच्चों की स्कूल फीस", "Tuition / Classes":"ट्यूशन / क्लासेस",
+  "Medical / Doctor":"डॉक्टर / मेडिकल", "Medicines":"दवाइयां", "Clothes":"कपड़े",
+  "Home Party":"घर की पार्टी", "Festival / Pooja":"त्योहार / पूजा", "Newspaper / Cable":"अख़बार / केबल",
+  "Furniture / Appliances":"फर्नीचर / उपकरण", "Other":"अन्य",
+  "Self Investment":"खुद का निवेश", "Entertainment / Movies":"मनोरंजन / फिल्में", "Travel / Outing":"यात्रा / आउटिंग",
+  "Personal Care / Salon":"पर्सनल केयर / सैलून", "Gym / Fitness":"जिम / फिटनेस",
+  "Subscriptions (OTT)":"सब्सक्रिप्शन (OTT)", "Gifts":"गिफ्ट", "Party with Friends":"दोस्तों के साथ पार्टी",
+  "Self Shopping":"खुद की शॉपिंग",
+  "Shop Stock / Supplies":"दुकान का सामान", "Shop Rent":"दुकान का किराया", "Staff Salary":"स्टाफ सैलरी",
+  "Packaging":"पैकेजिंग", "Transport / Delivery":"ट्रांसपोर्ट / डिलीवरी", "Marketing":"मार्केटिंग",
+  "Repair":"रिपेयर", "Petrol / Diesel":"पेट्रोल / डीज़ल", "Service":"सर्विस", "Insurance":"बीमा",
+  "Challan / Fine":"चालान / जुर्माना", "Parking":"पार्किंग"
+};
+function t(key){ return (T[state.lang] && T[state.lang][key]) || T.en[key] || key; }
+function subLabel(sub){ return state.lang==="hi" ? (SUB_LABELS_HI[sub] || sub) : sub; }
+function catLabel(key){ return t("cat_"+key); }
+
+/* ================= KHATA (multi-profile) DATA LAYER ================= */
+const LS_KHATAS = "gk_khatas";
+const LS_ACTIVE_KHATA = "gk_active_khata";
+function loadKhatas(){ try { return JSON.parse(localStorage.getItem(LS_KHATAS)) || null; } catch(e){ return null; } }
+function saveKhatas(list){ localStorage.setItem(LS_KHATAS, JSON.stringify(list)); }
+function loadActiveKhata(){ return localStorage.getItem(LS_ACTIVE_KHATA) || null; }
+function saveActiveKhata(id){ localStorage.setItem(LS_ACTIVE_KHATA, id); }
+
+let khatas = loadKhatas();
+if(khatas === null){ khatas = [{ id:"default", name:"My Khata" }]; saveKhatas(khatas); }
+let activeKhataId = loadActiveKhata();
+if(!activeKhataId || !khatas.find(function(k){ return k.id===activeKhataId; })){ activeKhataId = khatas[0].id; saveActiveKhata(activeKhataId); }
+function nsKey(base){ return activeKhataId === "default" ? base : base + "_" + activeKhataId; }
+
+/* ================= DATA LAYER ================= */
+const LS_TX_BASE = "gk_transactions";
+const LS_INCOME_BASE = "gk_income";
+const LS_CONTACTS_BASE = "gk_contacts";
+const LS_UDHAR_OLD = "gk_udhar";
+const LS_BUDGETS_BASE = "gk_budgets";
+const LS_THEME = "gk_theme";
+const LS_LANG = "gk_lang";
+const LS_UPCOMING_BASE = "gk_upcoming";
+const LS_PROFILE = "gk_profile";
+const LS_LOCK = "gk_lock";
+
+function loadTx() { try { return JSON.parse(localStorage.getItem(nsKey(LS_TX_BASE))) || []; } catch(e){ return []; } }
+function saveTx(list) { localStorage.setItem(nsKey(LS_TX_BASE), JSON.stringify(list)); }
+function loadIncome() { try { return JSON.parse(localStorage.getItem(nsKey(LS_INCOME_BASE))) || []; } catch(e){ return []; } }
+function saveIncome(list) { localStorage.setItem(nsKey(LS_INCOME_BASE), JSON.stringify(list)); }
+function loadBudgets() { try { return JSON.parse(localStorage.getItem(nsKey(LS_BUDGETS_BASE))) || {}; } catch(e){ return {}; } }
+function saveBudgets(b) { localStorage.setItem(nsKey(LS_BUDGETS_BASE), JSON.stringify(b)); }
+function loadContacts() { try { return JSON.parse(localStorage.getItem(nsKey(LS_CONTACTS_BASE))) || null; } catch(e){ return null; } }
+function saveContacts(list) { localStorage.setItem(nsKey(LS_CONTACTS_BASE), JSON.stringify(list)); }
+function loadUpcoming() { try { return JSON.parse(localStorage.getItem(nsKey(LS_UPCOMING_BASE))) || []; } catch(e){ return []; } }
+function saveUpcoming(list) { localStorage.setItem(nsKey(LS_UPCOMING_BASE), JSON.stringify(list)); }
+function loadProfile() { try { return JSON.parse(localStorage.getItem(LS_PROFILE)) || { name:"You", photo:"" }; } catch(e){ return { name:"You", photo:"" }; } }
+function saveProfile(p) { localStorage.setItem(LS_PROFILE, JSON.stringify(p)); }
+function loadLock() { try { return JSON.parse(localStorage.getItem(LS_LOCK)) || { enabled:false, pin:"", bioId:"" }; } catch(e){ return { enabled:false, pin:"", bioId:"" }; } }
+function saveLock(l) { localStorage.setItem(LS_LOCK, JSON.stringify(l)); }
+
+let transactions = loadTx();
+let income = loadIncome();
+let budgets = loadBudgets();
+let contacts = loadContacts();
+let upcoming = loadUpcoming();
+let profile = loadProfile();
+let lock = loadLock();
+
+if(contacts === null){
+  contacts = [];
+  if(activeKhataId === "default"){
+    let old = [];
+    try { old = JSON.parse(localStorage.getItem(LS_UDHAR_OLD)) || []; } catch(e){ old = []; }
+    old.forEach(function(u){
+      let kind = null;
+      if(u.type === "lent" || u.type === "interest" || u.type === "emi") kind = "give";
+      if(u.type === "borrowed") kind = "got";
+      if(!kind) return;
+      let c = contacts.find(function(c2){ return c2.name.toLowerCase() === u.person.toLowerCase(); });
+      if(!c){ c = { id: uid(), name: u.person, phone: "", entries: [] }; contacts.push(c); }
+      c.entries.push({ id: u.id || uid(), kind: kind, amount: Number(u.amount), date: u.date, note: u.note || "" });
+    });
+  }
+  saveContacts(contacts);
+}
+
+/* ================= CATEGORIES ================= */
+const MAIN_CATS = {
+  ghar: { color: "#6366F1", icon: "home",
+    subs: ["Groceries / Rashan","Vegetables & Fruits","Milk / Dairy","Gas Cylinder","Electricity Bill","Water Bill","House Rent","Maintenance","Internet / WiFi","Mobile Recharge","Cook / Maid Salary","Kids School Fees","Tuition / Classes","Medical / Doctor","Medicines","Clothes","Home Party","Festival / Pooja","Newspaper / Cable","Furniture / Appliances","Other"] },
+  personal: { color: "#F59E0B", icon: "user",
+    subs: ["Self Investment","Entertainment / Movies","Travel / Outing","Personal Care / Salon","Gym / Fitness","Subscriptions (OTT)","Gifts","Party with Friends","Self Shopping","Other"] },
+  dukaan: { color: "#10B981", icon: "shop",
+    subs: ["Shop Stock / Supplies","Shop Rent","Staff Salary","Electricity Bill","Packaging","Transport / Delivery","Marketing","Other"] },
+  vehicle: { color: "#38BDF8", icon: "bike",
+    subs: ["Repair","Petrol / Diesel","Service","Insurance","Challan / Fine","Parking","Other"] },
+};
+const INCOME_SOURCES = [
+  { key:"salary", tKey:"inc_salary", color:"#34D399", icon:"wallet" },
+  { key:"business", tKey:"inc_business", color:"#6366F1", icon:"shop" },
+  { key:"freelance", tKey:"inc_freelance", color:"#F59E0B", icon:"sparkle" },
+  { key:"interest", tKey:"inc_interest", color:"#38BDF8", icon:"trendingUp" },
+  { key:"gift", tKey:"inc_gift", color:"#EC4899", icon:"gift" },
+  { key:"other", tKey:"inc_other", color:"#9CA3AF", icon:"user" },
+];
+
+const KEYWORD_MAP = [
+  { words:["gas","cylinder","lpg"], main:"ghar", sub:"Gas Cylinder" },
+  { words:["sabzi","vegetable","fruit","fal"], main:"ghar", sub:"Vegetables & Fruits" },
+  { words:["doodh","milk","dairy","dahi","curd"], main:"ghar", sub:"Milk / Dairy" },
+  { words:["ration","kirana","grocery","atta","chawal"], main:"ghar", sub:"Groceries / Rashan" },
+  { words:["electricity","bijli","light bill"], main:"ghar", sub:"Electricity Bill" },
+  { words:["water bill","pani bill"], main:"ghar", sub:"Water Bill" },
+  { words:["rent","kiraya makan","house rent"], main:"ghar", sub:"House Rent" },
+  { words:["maintenance","society"], main:"ghar", sub:"Maintenance" },
+  { words:["wifi","internet","broadband"], main:"ghar", sub:"Internet / WiFi" },
+  { words:["recharge","mobile bill"], main:"ghar", sub:"Mobile Recharge" },
+  { words:["maid","cook","bai","naukrani","salary ghar"], main:"ghar", sub:"Cook / Maid Salary" },
+  { words:["school fee","school","admission"], main:"ghar", sub:"Kids School Fees" },
+  { words:["tuition","coaching","classes"], main:"ghar", sub:"Tuition / Classes" },
+  { words:["doctor","hospital","clinic"], main:"ghar", sub:"Medical / Doctor" },
+  { words:["medicine","dawai","pharmacy"], main:"ghar", sub:"Medicines" },
+  { words:["kapde","shirt","saree","cloth","clothes"], main:"ghar", sub:"Clothes" },
+  { words:["party","celebration","birthday"], main:"ghar", sub:"Home Party" },
+  { words:["pooja","festival","diwali","temple","mandir","donation"], main:"ghar", sub:"Festival / Pooja" },
+  { words:["newspaper","cable","dish","dth"], main:"ghar", sub:"Newspaper / Cable" },
+  { words:["furniture","fridge","appliance","tv","washing machine"], main:"ghar", sub:"Furniture / Appliances" },
+  { words:["petrol","fuel","diesel"], main:"vehicle", sub:"Petrol / Diesel" },
+  { words:["repair","garage","mechanic"], main:"vehicle", sub:"Repair" },
+  { words:["service center","servicing"], main:"vehicle", sub:"Service" },
+  { words:["insurance"], main:"vehicle", sub:"Insurance" },
+  { words:["challan","fine","penalty"], main:"vehicle", sub:"Challan / Fine" },
+  { words:["parking"], main:"vehicle", sub:"Parking" },
+  { words:["shopping","mall","amazon","flipkart","online order"], main:"personal", sub:"Self Shopping" },
+  { words:["investment","mutual fund","sip","stock","share"], main:"personal", sub:"Self Investment" },
+  { words:["movie","cinema","netflix show"], main:"personal", sub:"Entertainment / Movies" },
+  { words:["travel","trip","outing","holiday"], main:"personal", sub:"Travel / Outing" },
+  { words:["salon","parlour","haircut"], main:"personal", sub:"Personal Care / Salon" },
+  { words:["gym","fitness"], main:"personal", sub:"Gym / Fitness" },
+  { words:["netflix","prime","subscription","hotstar"], main:"personal", sub:"Subscriptions (OTT)" },
+  { words:["gift","present"], main:"personal", sub:"Gifts" },
+  { words:["stock","supplies","saman","wholesale"], main:"dukaan", sub:"Shop Stock / Supplies" },
+  { words:["shop rent","dukaan kiraya"], main:"dukaan", sub:"Shop Rent" },
+  { words:["staff","salary","worker","karigar"], main:"dukaan", sub:"Staff Salary" },
+  { words:["packaging","packet","box"], main:"dukaan", sub:"Packaging" },
+  { words:["delivery","transport"], main:"dukaan", sub:"Transport / Delivery" },
+  { words:["marketing","ad","advertising"], main:"dukaan", sub:"Marketing" },
+];
+
+/* ================= HELPERS ================= */
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function monthKey(d){ return d.slice(0,7); }
+function monthLabel(mk){ const parts=mk.split("-"); const y=Number(parts[0]); const m=Number(parts[1]); return new Date(y,m-1,1).toLocaleString(state.lang==="hi"?"hi-IN":"en-IN",{month:"long",year:"numeric"}); }
+function fmt(n){ return "\u20B9" + Number(n||0).toLocaleString("en-IN"); }
+function uid(){ return Date.now().toString()+Math.random().toString(36).slice(2,7); }
+function prevMonthKey(mk){ const parts=mk.split("-").map(Number); const y=parts[0]; const m=parts[1]; const d=new Date(y,m-2,1); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
+function daysUntil(dateStr){ const d1=new Date(todayStr()); const d2=new Date(dateStr); return Math.round((d2-d1)/86400000); }
+function contactBalance(c){ let bal=0; c.entries.forEach(function(e){ bal += (e.kind==="give"?Number(e.amount):-Number(e.amount)); }); return bal; }
+function bufToB64(buf){ return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); }
+function b64ToBuf(b64){ const bin = atob(b64); const bytes = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i); return bytes.buffer; }
+
+let state = { tab: "dashboard", month: todayStr().slice(0,7), addMain: "ghar", addSub: MAIN_CATS.ghar.subs[0],
+  udharView: "list", activeContactId: null, entryKind: "give", selectMode: false, selectedIds: [],
+  drawerOpen: false, drawerSub: null, pinEntry: "", lang: localStorage.getItem(LS_LANG) || "en",
+  txSearch: "", contactSearch: "", openSwipeId: null, showEntryForm: false,
+  addMode: "expense", incomeSource: "salary", reportsPeriod: "monthly", trendPeriod: "monthly" };
+
+/* ================= DARK MODE (fix: apply saved theme immediately; dark is now the default) ================= */
+(function applyTheme(){
+  const saved = localStorage.getItem(LS_THEME);
+  if(saved === "light"){ /* user explicitly chose light, leave body without .dark */ }
+  else { document.body.classList.add("dark"); }
+})();
+
+/* ================= UI TEXT / ICON REFRESH ================= */
+function refreshStaticText(){
+  document.getElementById("txtEyebrow").textContent = t("eyebrow");
+  document.getElementById("txtTitle").textContent = t("app_title");
+  document.getElementById("txtSubtitle").textContent = t("app_subtitle");
+  document.getElementById("navHomeLbl").textContent = t("nav_home");
+  document.getElementById("navReportsLbl").textContent = t("nav_reports");
+  document.getElementById("navAddLbl").textContent = t("nav_add");
+  document.getElementById("navLoansLbl").textContent = t("nav_loans");
+  document.getElementById("khataPillName").textContent = (khatas.find(function(k){return k.id===activeKhataId;})||{}).name || "My Khata";
+  document.getElementById("khataPanelTitle").textContent = t("switch_khata");
+}
+function mountStaticIcons(){
+  document.getElementById("hamburgerBtn").innerHTML = ic("menu",18);
+  document.getElementById("drawerCloseBtn").innerHTML = ic("close",15);
+  document.getElementById("khataPillIcon").innerHTML = ic("book",13);
+  document.getElementById("navHomeIc").innerHTML = ic("home",18);
+  document.getElementById("navReportsIc").innerHTML = ic("pieChart",18);
+  document.getElementById("navAddIc").innerHTML = ic("plus",18);
+  document.getElementById("navLoansIc").innerHTML = ic("wallet",18);
+  document.getElementById("lockIconWrap").innerHTML = ic("lock",26);
+}
+
+/* ================= LOCK SCREEN ================= */
+function checkLock(){
+  if(lock.enabled){
+    document.getElementById("lockScreen").classList.add("show");
+    renderLockKeypad(); renderLockDots();
+    const bioBtn = document.getElementById("bioUnlockBtn");
+    if(lock.bioId){
+      bioBtn.classList.remove("hidden");
+      bioBtn.innerHTML = ic("fingerprint",16) + " <span>"+t("fingerprint_unlock")+"</span>";
+      bioBtn.onclick = tryBiometricUnlock;
+    } else {
+      bioBtn.classList.add("hidden");
+    }
+  }
+}
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "hidden" && lock.enabled){
+    document.getElementById("lockScreen").classList.add("show");
+    state.pinEntry = "";
+  } else if(document.visibilityState === "visible" && lock.enabled){
+    renderLockKeypad(); renderLockDots();
+    const bioBtn = document.getElementById("bioUnlockBtn");
+    if(lock.bioId){ bioBtn.classList.remove("hidden"); bioBtn.innerHTML = ic("fingerprint",16) + " <span>"+t("fingerprint_unlock")+"</span>"; bioBtn.onclick = tryBiometricUnlock; }
+  }
+});
+function renderLockKeypad(){
+  const keys = ["1","2","3","4","5","6","7","8","9","","0","del"];
+  let html = "";
+  keys.forEach(function(k){
+    if(k===""){ html += '<div></div>'; }
+    else if(k==="del"){ html += '<button class="lock-key" onclick="lockKeyPress(\'del\')">'+ic("close",18)+'</button>'; }
+    else { html += '<button class="lock-key" onclick="lockKeyPress(\''+k+'\')">'+k+'</button>'; }
+  });
+  document.getElementById("lockKeypad").innerHTML = html;
+}
+function renderLockDots(){
+  let html = "";
+  for(let i=0;i<4;i++){ html += '<div class="lock-dot '+(i<state.pinEntry.length?"filled":"")+'"></div>'; }
+  document.getElementById("lockDots").innerHTML = html;
+}
+function lockKeyPress(k){
+  if(k==="del"){ state.pinEntry = state.pinEntry.slice(0,-1); renderLockDots(); return; }
+  if(state.pinEntry.length>=4) return;
+  state.pinEntry += k; renderLockDots();
+  if(state.pinEntry.length===4){
+    if(state.pinEntry === lock.pin){ unlockApp(); }
+    else {
+      document.getElementById("lockError").textContent = "Wrong PIN, try again.";
+      const dots = document.getElementById("lockDots"); dots.classList.add("shake");
+      setTimeout(function(){ dots.classList.remove("shake"); state.pinEntry=""; renderLockDots(); }, 350);
+    }
+  }
+}
+function unlockApp(){
+  document.getElementById("lockScreen").classList.remove("show");
+  document.getElementById("lockError").textContent = ""; state.pinEntry = ""; renderAll();
+}
+async function tryBiometricUnlock(){
+  try{
+    const challenge = new Uint8Array(32); crypto.getRandomValues(challenge);
+    const cred = await navigator.credentials.get({
+      publicKey: { challenge: challenge, allowCredentials: [{ id: b64ToBuf(lock.bioId), type: "public-key" }], userVerification: "required", timeout: 60000 }
+    });
+    if(cred){ unlockApp(); }
+  } catch(e){ document.getElementById("lockError").textContent = "Fingerprint not recognized. Use PIN instead."; }
+}
+async function registerBiometric(){
+  if(!window.PublicKeyCredential){ alert("Fingerprint unlock isn't supported on this device/browser."); return; }
+  try{
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if(!available){ alert("No fingerprint/biometric sensor found on this device."); return; }
+    const challenge = new Uint8Array(32); crypto.getRandomValues(challenge);
+    const userId = new Uint8Array(16); crypto.getRandomValues(userId);
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: challenge,
+        rp: { name: "Kharcha Tracker" },
+        user: { id: userId, name: "user", displayName: profile.name || "User" },
+        pubKeyCredParams: [{ type:"public-key", alg:-7 }, { type:"public-key", alg:-257 }],
+        authenticatorSelection: { authenticatorAttachment:"platform", userVerification:"required" },
+        timeout: 60000
+      }
+    });
+    if(cred){
+      lock.bioId = bufToB64(cred.rawId);
+      saveLock(lock);
+      alert("Fingerprint unlock enabled.");
+      renderDrawer();
+    }
+  } catch(e){ alert("Couldn't set up fingerprint unlock. Please try again."); }
+}
+
+/* ================= KHATA SWITCHER ================= */
+document.getElementById("khataPill").onclick = openKhataPanel;
+document.getElementById("khataOverlay").onclick = closeKhataPanel;
+function openKhataPanel(){
+  document.getElementById("khataOverlay").classList.add("open");
+  document.getElementById("khataPanel").classList.add("open");
+  renderKhataPanel();
+}
+function closeKhataPanel(){
+  document.getElementById("khataOverlay").classList.remove("open");
+  document.getElementById("khataPanel").classList.remove("open");
+}
+function renderKhataPanel(){
+  let html = '<button class="create-khata-btn" onclick="createKhata()">'+t("create_khata")+'</button>';
+  khatas.forEach(function(k){
+    const isCurrent = k.id === activeKhataId;
+    html += '<div class="khata-item '+(isCurrent?"current":"")+'" onclick="switchKhata(\''+k.id+'\')">';
+    html += '<div class="khata-item-name">'+k.name+'</div>';
+    if(isCurrent){ html += '<div class="khata-item-tag">'+t("current_khata")+'</div>'; }
+    html += '</div>';
+  });
+  document.getElementById("khataPanelBody").innerHTML = html;
+}
+function createKhata(){
+  const name = prompt("Name this khata (e.g. Home, My Shop, Side Business):");
+  if(!name || !name.trim()) return;
+  const newId = uid();
+  khatas.push({ id:newId, name:name.trim() });
+  saveKhatas(khatas);
+  switchKhata(newId);
+}
+function switchKhata(id){
+  activeKhataId = id; saveActiveKhata(id);
+  transactions = loadTx(); income = loadIncome(); budgets = loadBudgets(); contacts = loadContacts() || []; upcoming = loadUpcoming();
+  state.tab = "dashboard"; state.udharView = "list"; state.activeContactId = null;
+  state.selectMode = false; state.selectedIds = []; state.month = todayStr().slice(0,7);
+  state.txSearch = ""; state.contactSearch = "";
+  closeKhataPanel(); setTab("dashboard"); refreshStaticText();
+}
+
+/* ================= DRAWER ================= */
+function openDrawer(){
+  state.drawerOpen = true; state.drawerSub = null;
+  document.getElementById("drawerOverlay").classList.add("open");
+  document.getElementById("drawerPanel").classList.add("open");
+  renderDrawer();
+}
+function closeDrawer(){
+  state.drawerOpen = false;
+  document.getElementById("drawerOverlay").classList.remove("open");
+  document.getElementById("drawerPanel").classList.remove("open");
+}
+document.getElementById("hamburgerBtn").onclick = openDrawer;
+document.getElementById("drawerCloseBtn").onclick = closeDrawer;
+document.getElementById("drawerOverlay").onclick = closeDrawer;
+
+function renderDrawerHeader(){
+  const avatarEl = document.getElementById("drawerAvatar");
+  avatarEl.innerHTML = profile.photo ? '<img src="'+profile.photo+'" />' : (profile.name||"Y").trim().charAt(0).toUpperCase();
+  document.getElementById("drawerNameText").textContent = profile.name || t("you");
+  document.getElementById("drawerNameEdit").innerHTML = ic("edit",11) + " <span>"+t("edit_photo")+"</span>";
+}
+document.getElementById("drawerAvatar").onclick = function(){ document.getElementById("photoFileInput").click(); };
+document.getElementById("drawerNameEdit").onclick = function(){
+  const n = prompt("Your name:", profile.name || "You");
+  if(n && n.trim()){ profile.name = n.trim(); saveProfile(profile); renderDrawerHeader(); }
+};
+document.getElementById("photoFileInput").onchange = function(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){ profile.photo = ev.target.result; saveProfile(profile); renderDrawerHeader(); };
+  reader.readAsDataURL(file);
+};
+
+function renderDrawer(){
+  renderDrawerHeader();
+  const body = document.getElementById("drawerBody");
+  let html = "";
+
+  html += '<div class="drawer-item" onclick="toggleDrawerSub(\'lang\')"><div class="drawer-icon">'+ic("globe",17)+'</div><div class="drawer-label">'+t("language_label")+'</div><div style="font-size:11px;color:var(--muted);">'+(state.lang==="hi"?"हिंदी":"English")+'</div></div>';
+  if(state.drawerSub === "lang"){ html += renderLangPanel(); }
+
+  html += '<div class="drawer-item" onclick="toggleDarkMode()"><div class="drawer-icon">'+ic("moon",17)+'</div><div class="drawer-label">'+t("dark_mode")+'</div>';
+  html += '<div class="toggle-switch '+(document.body.classList.contains("dark")?"on":"")+'"><div class="dot"></div></div></div>';
+
+  html += '<div class="drawer-item" onclick="toggleDrawerSub(\'lock\')"><div class="drawer-icon">'+ic("lock",17)+'</div><div><div class="drawer-label">'+t("app_lock")+'</div><div class="drawer-sub">'+(lock.enabled?t("lock_on"):t("lock_off"))+'</div></div></div>';
+  if(state.drawerSub === "lock"){ html += renderLockSettingsPanel(); }
+
+  html += '<div class="drawer-item" onclick="toggleDrawerSub(\'upcoming\')"><div class="drawer-icon">'+ic("bell",17)+'</div><div><div class="drawer-label">'+t("upcoming_title")+'</div><div class="drawer-sub">'+upcoming.length+' '+t("scheduled")+'</div></div></div>';
+  if(state.drawerSub === "upcoming"){ html += renderUpcomingPanel(); }
+
+  html += '<div class="drawer-item" onclick="exportData()"><div class="drawer-icon">'+ic("upload",17)+'</div><div><div class="drawer-label">'+t("export_data")+'</div><div class="drawer-sub">'+t("export_sub")+'</div></div></div>';
+  html += '<div class="drawer-item" onclick="document.getElementById(\'importFileInput\').click()"><div class="drawer-icon">'+ic("download",17)+'</div><div><div class="drawer-label">'+t("restore_data")+'</div><div class="drawer-sub">'+t("restore_sub")+'</div></div></div>';
+  html += '<div class="drawer-item" onclick="clearAllData()"><div class="drawer-icon" style="color:#DC2626">'+ic("trash",17)+'</div><div><div class="drawer-label" style="color:#DC2626">'+t("clear_data")+'</div><div class="drawer-sub">'+t("clear_sub")+'</div></div></div>';
+  html += '<div class="drawer-item" style="border-bottom:none;"><div class="drawer-icon">'+ic("info",17)+'</div><div><div class="drawer-label">Kharcha Tracker</div><div class="drawer-sub">'+t("about_sub")+'</div></div></div>';
+
+  body.innerHTML = html;
+  const upT=document.getElementById("upTitle"); if(upT){ document.getElementById("upSaveBtn").onclick = submitUpcoming; }
+  const setPinBtn=document.getElementById("setPinBtn"); if(setPinBtn){ setPinBtn.onclick = saveNewPin; }
+  const disablePinBtn=document.getElementById("disablePinBtn"); if(disablePinBtn){ disablePinBtn.onclick = disableLock; }
+  const enrollBioBtn=document.getElementById("enrollBioBtn"); if(enrollBioBtn){ enrollBioBtn.onclick = registerBiometric; }
+}
+function toggleDrawerSub(key){ state.drawerSub = (state.drawerSub === key) ? null : key; renderDrawer(); }
+function toggleDarkMode(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem(LS_THEME, document.body.classList.contains("dark") ? "dark" : "light");
+  renderDrawer();
+}
+
+function renderLangPanel(){
+  const langs = [ {code:"en", label:"English"}, {code:"hi", label:"हिंदी (Hindi)"} ];
+  let html = '<div class="lang-chip-row">';
+  langs.forEach(function(l){ html += '<button class="lang-chip '+(state.lang===l.code?"active":"")+'" onclick="setLang(\''+l.code+'\')">'+l.label+'</button>'; });
+  html += '</div><p style="font-size:10.5px;color:var(--muted);padding:0 4px;">More Indian languages (Marathi, Gujarati, Punjabi, Tamil, Telugu, Bengali) can be added — just ask.</p>';
+  return html;
+}
+function setLang(code){ state.lang = code; localStorage.setItem(LS_LANG, code); refreshStaticText(); renderDrawer(); renderAll(); }
+
+function renderLockSettingsPanel(){
+  let html = '<div class="drawer-subpanel">';
+  if(!lock.enabled){
+    html += '<label class="field-label">Set a 4-digit PIN</label><input type="tel" maxlength="4" id="newPin" placeholder="1234" />';
+    html += '<label class="field-label">Confirm PIN</label><input type="tel" maxlength="4" id="confirmPin" placeholder="1234" />';
+    html += '<button class="save-btn small" id="setPinBtn">'+t("turn_on_lock")+'</button>';
+  } else {
+    html += '<p style="font-size:12px;color:var(--muted);margin-bottom:8px;">'+t("lock_is_on")+'</p>';
+    if(lock.bioId){
+      html += '<p style="font-size:12px;color:var(--green);margin-bottom:8px;display:flex;align-items:center;gap:6px;">'+ic("fingerprint",14)+' '+t("fingerprint_on")+'</p>';
+    } else {
+      html += '<button class="pick-contact-btn" id="enrollBioBtn">'+ic("fingerprint",14)+' '+t("enable_fingerprint")+'</button>';
+    }
+    html += '<button class="save-btn danger small" id="disablePinBtn">'+t("turn_off_lock")+'</button>';
+  }
+  html += '</div>';
+  return html;
+}
+function saveNewPin(){
+  const p1 = document.getElementById("newPin").value.trim();
+  const p2 = document.getElementById("confirmPin").value.trim();
+  if(p1.length!==4 || !/^[0-9]{4}$/.test(p1)){ alert("Please enter a 4-digit PIN."); return; }
+  if(p1 !== p2){ alert("PINs don't match."); return; }
+  lock = { enabled:true, pin:p1, bioId: lock.bioId || "" }; saveLock(lock);
+  alert("App Lock turned on. You'll need this PIN next time you open the app.");
+  renderDrawer();
+}
+function disableLock(){
+  if(!confirm("Turn off App Lock?")) return;
+  lock = { enabled:false, pin:"", bioId:"" }; saveLock(lock); renderDrawer();
+}
+
+function renderUpcomingPanel(){
+  let html = '<div class="drawer-subpanel">';
+  html += '<label class="field-label">'+t("title_field")+'</label><input type="text" id="upTitle" placeholder="e.g. HDFC Home Loan EMI" />';
+  html += '<label class="field-label">'+t("amount_label")+' (\u20B9)</label><input type="number" inputmode="decimal" id="upAmount" placeholder="0" />';
+  html += '<label class="field-label">'+t("due_date")+'</label><input type="date" id="upDate" value="'+todayStr()+'" />';
+  html += '<label class="field-label">'+t("note_label")+'</label><input type="text" id="upNote" />';
+  html += '<button class="save-btn small" id="upSaveBtn">'+t("add_upcoming")+'</button>';
+  if(upcoming.length){
+    const sorted = upcoming.slice().sort(function(a,b){ return a.dueDate<b.dueDate?-1:1; });
+    sorted.forEach(function(u){
+      const d = daysUntil(u.dueDate);
+      html += '<div class="upcoming-row" style="margin-top:10px;"><div class="upcoming-badge '+(d<=15?"urgent":"")+'">'+(d<0?"past":d+"d")+'</div>';
+      html += '<div><div class="tx-title">'+u.title+'</div><div class="tx-sub">'+fmt(u.amount)+' · '+u.dueDate+'</div></div>';
+      html += '<button class="icon-btn" style="margin-left:auto;" onclick="deleteUpcoming(\''+u.id+'\')">'+ic("trash",15)+'</button></div>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+function submitUpcoming(){
+  const title = document.getElementById("upTitle").value.trim();
+  const amount = Number(document.getElementById("upAmount").value);
+  const dueDate = document.getElementById("upDate").value || todayStr();
+  const note = document.getElementById("upNote").value.trim();
+  if(!title || !amount || amount<=0) return;
+  upcoming.unshift({ id: uid(), title: title, amount: amount, dueDate: dueDate, note: note });
+  saveUpcoming(upcoming); renderDrawer(); renderDashboard();
+}
+function deleteUpcoming(id){
+  if(!confirm(t("confirm_delete_entry"))) return;
+  upcoming = upcoming.filter(function(u){ return u.id !== id; });
+  saveUpcoming(upcoming); renderDrawer(); renderDashboard();
+}
+function exportData(){
+  const data = { khataId: activeKhataId, transactions: transactions, income: income, contacts: contacts, budgets: budgets, upcoming: upcoming, profile: profile, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "kharcha-tracker-backup-" + todayStr() + ".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+document.getElementById("importFileInput").onchange = function(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(!confirm("This will replace your current khata's data with the backup file. Continue?")) return;
+      transactions = data.transactions || []; income = data.income || []; contacts = data.contacts || []; budgets = data.budgets || {};
+      upcoming = data.upcoming || []; profile = data.profile || profile;
+      saveTx(transactions); saveIncome(income); saveContacts(contacts); saveBudgets(budgets); saveUpcoming(upcoming); saveProfile(profile);
+      alert("Backup restored successfully."); renderDrawer(); renderAll();
+    } catch(err){ alert("This file couldn't be read. Please choose a valid backup file."); }
+  };
+  reader.readAsText(file);
+};
+function clearAllData(){
+  if(!confirm("This will permanently delete this khata's expenses and loans. Continue?")) return;
+  if(!confirm("Are you absolutely sure? Consider exporting a backup first.")) return;
+  localStorage.removeItem(nsKey(LS_TX_BASE)); localStorage.removeItem(nsKey(LS_INCOME_BASE)); localStorage.removeItem(nsKey(LS_CONTACTS_BASE));
+  localStorage.removeItem(nsKey(LS_BUDGETS_BASE)); localStorage.removeItem(nsKey(LS_UPCOMING_BASE));
+  transactions = []; income = []; contacts = []; budgets = {}; upcoming = [];
+  renderDrawer(); renderAll();
+}
+
+/* ================= TAB SWITCH ================= */
+function setTab(tab){
+  state.tab = tab;
+  document.getElementById("dashboardTab").classList.toggle("hidden", tab!=="dashboard");
+  document.getElementById("reportsTab").classList.toggle("hidden", tab!=="reports");
+  document.getElementById("addTab").classList.toggle("hidden", tab!=="add");
+  document.getElementById("udharTab").classList.toggle("hidden", tab!=="udhar");
+  document.getElementById("navDashboard").classList.toggle("active", tab==="dashboard");
+  document.getElementById("navReports").classList.toggle("active", tab==="reports");
+  document.getElementById("navAdd").classList.toggle("active", tab==="add");
+  document.getElementById("navUdhar").classList.toggle("active", tab==="udhar");
+  if(tab==="udhar"){ state.udharView = "list"; state.activeContactId = null; }
+  if(tab!=="dashboard"){ state.selectMode = false; state.selectedIds = []; }
+  renderAll();
+}
+document.getElementById("navDashboard").onclick = function(){ setTab("dashboard"); };
+document.getElementById("navReports").onclick = function(){ setTab("reports"); };
+document.getElementById("navAdd").onclick = function(){ setTab("add"); };
+document.getElementById("navUdhar").onclick = function(){ setTab("udhar"); };
+
+/* ================= STREAK ================= */
+function calcStreak(){
+  const days = new Set(transactions.map(function(t){ return t.date; }));
+  if(days.size===0) return 0;
+  let streak = 0; let cursor = new Date();
+  function cursorStr(){ return cursor.toISOString().slice(0,10); }
+  if(!days.has(cursorStr())){ cursor.setDate(cursor.getDate()-1); if(!days.has(cursorStr())) return 0; }
+  while(days.has(cursorStr())){ streak++; cursor.setDate(cursor.getDate()-1); }
+  return streak;
+}
+
+/* ================= DASHBOARD ================= */
+function renderDashboard(){
+  const months = Array.from(new Set(transactions.map(function(t){ return monthKey(t.date); }).concat([todayStr().slice(0,7)]))).sort().reverse();
+  if(months.indexOf(state.month) === -1) state.month = months[0];
+  const monthTx = transactions.filter(function(t){ return monthKey(t.date) === state.month; });
+  const catTotals = {}; Object.keys(MAIN_CATS).forEach(function(k){ catTotals[k]=0; });
+  monthTx.forEach(function(t){ catTotals[t.main] = (catTotals[t.main]||0) + Number(t.amount); });
+  const grandTotal = Object.values(catTotals).reduce(function(a,b){ return a+b; }, 0);
+  const topCat = Object.entries(catTotals).sort(function(a,b){ return b[1]-a[1]; })[0];
+  const prevTx = transactions.filter(function(t){ return monthKey(t.date) === prevMonthKey(state.month); });
+  const prevTotal = prevTx.reduce(function(a,t){ return a+Number(t.amount); }, 0);
+  const subTotals = {};
+  monthTx.forEach(function(t){ const key = t.main+"::"+t.sub; subTotals[key]=(subTotals[key]||0)+Number(t.amount); });
+  const subEntries = Object.entries(subTotals).sort(function(a,b){ return b[1]-a[1]; }).slice(0,6);
+  const streak = calcStreak();
+
+  let insightLine = "";
+  if(prevTotal > 0 && grandTotal > 0){
+    const diff = grandTotal - prevTotal;
+    const pct = Math.round(Math.abs(diff)/prevTotal*100);
+    if(Math.abs(pct) >= 3){
+      insightLine = (diff > 0 ? t("trend_up") : t("trend_down"))+" " + pct + "% "+(diff>0?t("trend_up2"):t("trend_down2"))+" (" + fmt(Math.abs(diff)) + ").";
+    }
+  }
+
+  const soonUpcoming = upcoming.filter(function(u){ const d=daysUntil(u.dueDate); return d>=0 && d<=15; }).sort(function(a,b){ return a.dueDate<b.dueDate?-1:1; });
+
+  let html = "";
+  if(soonUpcoming.length){
+    const u = soonUpcoming[0]; const d = daysUntil(u.dueDate);
+    html += '<div class="reminder-banner">'+ic("bell",18)+'<div><b>'+u.title+' '+t("reminder_due")+' '+(d===0?"today":"in "+d+" day"+(d===1?"":"s"))+'</b>'+fmt(u.amount)+' — '+u.dueDate+(soonUpcoming.length>1?' · +'+(soonUpcoming.length-1)+' more':'')+'</div></div>';
+  }
+  html += '<div class="month-row">'+ic("calendar" in ICONS?"calendar":"info",15)+'<select id="monthSelect">';
+  months.forEach(function(m){ html += '<option value="'+m+'" '+(m===state.month?"selected":"")+'>'+monthLabel(m)+'</option>'; });
+  html += '</select></div>';
+  if(streak >= 2){ html += '<div class="streak-badge">\uD83D\uDD25 '+streak+' '+t("streak_text")+'</div>'; }
+  html += '<div class="total-card"><div class="total-label">'+t("total_label")+'</div><div class="total-amount">'+fmt(grandTotal)+'</div>';
+  if(topCat && topCat[1]>0){ html += '<div class="top-badge">'+t("highest_label")+': <b>'+catLabel(topCat[0])+'</b> — '+fmt(topCat[1])+'</div>'; }
+  html += '</div>';
+  if(insightLine){ html += '<div class="insight-line">'+insightLine+'</div>'; }
+  html += '<h3 class="section-title">'+t("by_category")+'</h3><div class="hscroll">';
+  Object.entries(MAIN_CATS).forEach(function(entry){
+    const key = entry[0]; const cfg = entry[1];
+    const budget = budgets[key]; const spent = catTotals[key]; const overBudget = budget && spent >= budget*0.8;
+    html += '<div class="cat-card"><div class="cci" style="background:'+cfg.color+'1c;color:'+cfg.color+'">'+ic(cfg.icon,16)+'</div>';
+    html += '<div class="ccname">'+catLabel(key)+'</div><div class="ccamt" style="color:'+cfg.color+'">'+fmt(spent)+'</div>';
+    if(budget){ html += '<div class="ccnote">Budget: '+fmt(budget)+'</div>'; }
+    if(overBudget){ html += '<div class="ccwarn">'+Math.round(spent/budget*100)+'% used</div>'; }
+    html += '<button class="budget-btn" onclick="setBudget(\''+key+'\')" title="Set budget">'+ic("target",14)+'</button></div>';
+  });
+  html += '</div>';
+  if(subEntries.length){
+    html += '<h3 class="section-title">'+t("where_money")+'</h3>';
+    subEntries.forEach(function(entry){
+      const key = entry[0]; const amt = entry[1]; const parts = key.split("::"); const main = parts[0]; const sub = parts[1];
+      const pct = grandTotal ? Math.round((amt/grandTotal)*100) : 0;
+      html += '<div style="margin-bottom:10px"><div class="subrow"><span>'+subLabel(sub)+'</span><span>'+fmt(amt)+'</span></div>';
+      html += '<div class="bartrack"><div class="barfill" style="width:'+pct+'%;background:'+MAIN_CATS[main].color+'"></div></div></div>';
+    });
+  }
+  html += '<h3 class="section-title">'+t("entries_title")+' ('+monthTx.length+')<button class="st-action" onclick="toggleSelectMode()">'+(state.selectMode?t("cancel_btn"):t("select_btn"))+'</button></h3>';
+  html += '<div class="search-wrap">'+ic("search",15)+'<input type="text" id="txSearchInput" placeholder="'+t("search_entries_ph")+'" value="'+state.txSearch.replace(/"/g,"&quot;")+'" /></div>';
+  html += '<p style="font-size:10.5px;color:var(--muted);margin-bottom:8px;">'+t("entries_tip")+'</p>';
+  html += '<div id="entriesListContainer"></div>';
+  document.getElementById("dashboardTab").innerHTML = html;
+  document.getElementById("monthSelect").onchange = function(e){ state.month = e.target.value; renderDashboard(); };
+  const searchInput = document.getElementById("txSearchInput");
+  searchInput.oninput = function(e){ state.txSearch = e.target.value; renderEntriesList(monthTx); };
+  renderEntriesList(monthTx);
+}
+function renderEntriesList(monthTx){
+  const container = document.getElementById("entriesListContainer");
+  const q = state.txSearch.trim().toLowerCase();
+  const filtered = q ? monthTx.filter(function(t2){
+    return subLabel(t2.sub).toLowerCase().indexOf(q)!==-1 || catLabel(t2.main).toLowerCase().indexOf(q)!==-1 || (t2.note||"").toLowerCase().indexOf(q)!==-1;
+  }) : monthTx;
+  let html = "";
+  if(monthTx.length===0){ html = '<div class="empty-note">'+t("no_entries")+'</div>'; }
+  else if(filtered.length===0){ html = '<div class="empty-note">'+t("no_search_results")+'</div>'; }
+  else {
+    filtered.forEach(function(t2){
+      const isSel = state.selectedIds.indexOf(t2.id) !== -1;
+      html += '<div class="tx-wrap"><button class="tx-delete-btn" onclick="deleteTx(\''+t2.id+'\')">'+ic("trash",16)+'<span>'+t("delete_word")+'</span></button>';
+      html += '<div class="tx-row '+(isSel?"selected":"")+'" data-id="'+t2.id+'" data-kind="tx" onclick="'+(state.selectMode?"toggleSelectEntry('"+t2.id+"')":"")+'">';
+      if(state.selectMode){ html += '<div class="tx-check '+(isSel?"checked":"")+'">'+(isSel?ic("check",11):"")+'</div>'; }
+      else { html += '<div class="tx-dot" style="background:'+MAIN_CATS[t2.main].color+'"></div>'; }
+      html += '<div><div class="tx-title">'+subLabel(t2.sub)+'</div><div class="tx-sub">'+t2.date+' · '+catLabel(t2.main)+(t2.note?" · "+t2.note:"")+'</div></div>';
+      html += '<div class="tx-amt">'+fmt(t2.amount)+'</div></div></div>';
+    });
+    if(state.selectMode && state.selectedIds.length){
+      html += '<button class="save-btn danger" onclick="deleteSelected()">'+t("delete_word")+' '+state.selectedIds.length+'</button>';
+    }
+  }
+  container.innerHTML = html;
+  if(!state.selectMode) attachSwipeHandlers();
+}
+function toggleSelectMode(){ state.selectMode = !state.selectMode; state.selectedIds = []; renderDashboard(); }
+function toggleSelectEntry(id){ const idx = state.selectedIds.indexOf(id); if(idx===-1) state.selectedIds.push(id); else state.selectedIds.splice(idx,1); renderDashboard(); }
+function deleteSelected(){
+  if(!confirm(t("confirm_delete_multi").replace("{n}", state.selectedIds.length))) return;
+  transactions = transactions.filter(function(t){ return state.selectedIds.indexOf(t.id)===-1; });
+  saveTx(transactions); state.selectMode=false; state.selectedIds=[]; renderDashboard();
+}
+function deleteTx(id){
+  if(!confirm(t("confirm_delete_entry"))) return;
+  transactions = transactions.filter(function(t){ return t.id!==id; });
+  saveTx(transactions);
+  state.openSwipeId = null;
+  renderDashboard();
+}
+function setBudget(key){
+  const current = budgets[key] || "";
+  const val = prompt("Set a monthly budget for " + catLabel(key) + " (leave blank to remove):", current);
+  if(val === null) return;
+  const num = Number(val);
+  if(val.trim()===""){ delete budgets[key]; } else if(num > 0){ budgets[key] = num; }
+  saveBudgets(budgets); renderDashboard();
+}
+function attachSwipeHandlers(){
+  document.querySelectorAll('.tx-row[data-kind]').forEach(function(row){
+    let startX=0, currentX=0, dragging=false, baseX = (row.getAttribute('data-id')===state.openSwipeId) ? -84 : 0;
+    row.style.transform = 'translateX('+baseX+'px)';
+    row.addEventListener('touchstart', function(e){ startX=e.touches[0].clientX; dragging=true; row.style.transition='none'; }, {passive:true});
+    row.addEventListener('touchmove', function(e){
+      if(!dragging) return;
+      let dx = e.touches[0].clientX-startX + baseX;
+      if(dx>0) dx=0; if(dx<-84) dx=-84;
+      currentX = dx;
+      row.style.transform = 'translateX('+dx+'px)';
+    }, {passive:true});
+    row.addEventListener('touchend', function(){
+      dragging=false; row.style.transition='transform .18s ease';
+      const id = row.getAttribute('data-id');
+      if(currentX < -42){ row.style.transform='translateX(-84px)'; state.openSwipeId = id; }
+      else { row.style.transform='translateX(0)'; if(state.openSwipeId===id) state.openSwipeId=null; }
+    });
+    row.addEventListener('click', function(){
+      if(baseX===-84 && !state.selectMode){ row.style.transition='transform .18s ease'; row.style.transform='translateX(0)'; state.openSwipeId=null; }
+    });
+  });
+}
+
+/* ================= REPORTS ================= */
+function getPeriodRange(period){
+  const now = new Date();
+  if(period === "weekly"){
+    const end = new Date(now); const start = new Date(now); start.setDate(start.getDate()-6);
+    return { start: start, end: end };
+  }
+  if(period === "yearly"){
+    return { start: new Date(now.getFullYear(),0,1), end: new Date(now.getFullYear(),11,31) };
+  }
+  return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: new Date(now.getFullYear(), now.getMonth()+1, 0) };
+}
+function inRange(dateStr, range){
+  const d = new Date(dateStr);
+  return d >= range.start && d <= new Date(range.end.getFullYear(), range.end.getMonth(), range.end.getDate(), 23,59,59);
+}
+function buildDonutSVG(segments, totalVal){
+  const size = 148, r = 54, cx = size/2, cy = size/2, circ = 2*Math.PI*r;
+  let offset = 0;
+  let circles = '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--track)" stroke-width="18"/>';
+  segments.forEach(function(seg){
+    if(seg.value<=0) return;
+    const frac = seg.value/totalVal;
+    const dash = frac*circ;
+    circles += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+seg.color+'" stroke-width="18" stroke-dasharray="'+dash+' '+(circ-dash)+'" stroke-dashoffset="'+(-offset)+'" transform="rotate(-90 '+cx+' '+cy+')" stroke-linecap="butt"/>';
+    offset += dash;
+  });
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'+circles+'</svg>';
+}
+function buildTrendSVG(buckets){
+  const w = 300, h = 130, padL = 34, padB = 20, padT = 10, padR = 10;
+  const maxVal = Math.max(1, Math.max.apply(null, buckets.map(function(b){ return Math.max(b.income,b.expense); })));
+  const stepX = (w-padL-padR) / Math.max(1,(buckets.length-1));
+  function yFor(v){ return h-padB - (v/maxVal)*(h-padB-padT); }
+  function xFor(i){ return padL + i*stepX; }
+  function pathFor(key){
+    return buckets.map(function(b,i){ return (i===0?"M":"L")+xFor(i).toFixed(1)+","+yFor(b[key]).toFixed(1); }).join(" ");
+  }
+  let grid = "";
+  for(let g=0; g<=3; g++){
+    const val = Math.round(maxVal*g/3);
+    const y = yFor(val);
+    grid += '<line x1="'+padL+'" y1="'+y+'" x2="'+(w-padR)+'" y2="'+y+'" stroke="var(--border)" stroke-width="1"/>';
+    grid += '<text x="2" y="'+(y+3)+'" font-size="8" fill="var(--muted)">'+fmtK(val)+'</text>';
+  }
+  let xLabels = buckets.map(function(b,i){ return '<text x="'+xFor(i)+'" y="'+(h-4)+'" font-size="8" fill="var(--muted)" text-anchor="middle">'+b.label+'</text>'; }).join("");
+  let dots = "";
+  buckets.forEach(function(b,i){
+    dots += '<circle cx="'+xFor(i)+'" cy="'+yFor(b.income)+'" r="2.5" fill="#34D399"/>';
+    dots += '<circle cx="'+xFor(i)+'" cy="'+yFor(b.expense)+'" r="2.5" fill="#F87171"/>';
+  });
+  return '<svg width="100%" height="130" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+grid+
+    '<path d="'+pathFor("income")+'" fill="none" stroke="#34D399" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
+    '<path d="'+pathFor("expense")+'" fill="none" stroke="#F87171" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
+    dots + xLabels + '</svg>';
+}
+function fmtK(v){ return v>=1000 ? (v/1000)+"K" : String(v); }
+function getTrendBuckets(period){
+  const now = new Date();
+  const buckets = [];
+  if(period === "yearly"){
+    for(let i=4;i>=0;i--){
+      const y = now.getFullYear()-i;
+      const start = new Date(y,0,1), end = new Date(y,11,31);
+      buckets.push({ label: String(y), start: start, end: end });
+    }
+  } else if(period === "weekly"){
+    for(let i=5;i>=0;i--){
+      const end = new Date(now); end.setDate(end.getDate()-(i*7));
+      const start = new Date(end); start.setDate(start.getDate()-6);
+      buckets.push({ label: (start.getMonth()+1)+"/"+start.getDate(), start: start, end: end });
+    }
+  } else {
+    for(let i=5;i>=0;i--){
+      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth()+1, 0);
+      buckets.push({ label: d.toLocaleString(state.lang==="hi"?"hi-IN":"en-IN",{month:"short"}), start: start, end: end });
+    }
+  }
+  buckets.forEach(function(b){
+    b.income = income.filter(function(i2){ return inRange(i2.date, b); }).reduce(function(a,i2){ return a+Number(i2.amount); },0);
+    b.expense = transactions.filter(function(t2){ return inRange(t2.date, b); }).reduce(function(a,t2){ return a+Number(t2.amount); },0);
+  });
+  return buckets;
+}
+function renderReports(){
+  const range = getPeriodRange(state.reportsPeriod);
+  const periodExpenses = transactions.filter(function(t2){ return inRange(t2.date, range); });
+  const periodIncome = income.filter(function(i2){ return inRange(i2.date, range); });
+  const totalExpense = periodExpenses.reduce(function(a,t2){ return a+Number(t2.amount); },0);
+  const totalIncome = periodIncome.reduce(function(a,i2){ return a+Number(i2.amount); },0);
+  const totalSavings = totalIncome - totalExpense;
+
+  const catTotals = {}; Object.keys(MAIN_CATS).forEach(function(k){ catTotals[k]=0; });
+  periodExpenses.forEach(function(t2){ catTotals[t2.main] = (catTotals[t2.main]||0)+Number(t2.amount); });
+  const segments = Object.entries(MAIN_CATS).map(function(entry){ return { key:entry[0], color:entry[1].color, value: catTotals[entry[0]] }; });
+
+  let html = '<h3 class="section-title" style="margin-top:4px;">'+t("reports_title")+'</h3>';
+  html += '<div class="period-tabs">';
+  ["weekly","monthly","yearly"].forEach(function(p){
+    html += '<button class="period-tab '+(state.reportsPeriod===p?"active":"")+'" onclick="setReportsPeriod(\''+p+'\')">'+t("period_"+p)+'</button>';
+  });
+  html += '</div>';
+
+  html += '<div class="summary-row-3">';
+  html += '<div class="summary-mini-card" style="border-color:#34D39944"><div class="smc-label" style="color:#34D399">'+t("total_income")+'</div><div class="smc-val" style="color:#34D399">'+fmt(totalIncome)+'</div></div>';
+  html += '<div class="summary-mini-card" style="border-color:#F8717144"><div class="smc-label" style="color:#F87171">'+t("total_expense")+'</div><div class="smc-val" style="color:#F87171">'+fmt(totalExpense)+'</div></div>';
+  html += '<div class="summary-mini-card" style="border-color:#A78BFA44"><div class="smc-label" style="color:#A78BFA">'+t("total_savings")+'</div><div class="smc-val" style="color:#A78BFA">'+fmt(totalSavings)+'</div></div>';
+  html += '</div>';
+
+  html += '<h3 class="section-title">'+t("expenses_overview")+'</h3>';
+  if(totalExpense<=0){
+    html += '<div class="empty-note">'+t("no_data_period")+'</div>';
+  } else {
+    html += '<div class="donut-card"><div class="donut-wrap">'+buildDonutSVG(segments, totalExpense)+'</div><div class="donut-legend">';
+    segments.slice().sort(function(a,b){ return b.value-a.value; }).forEach(function(seg){
+      if(seg.value<=0) return;
+      const pct = Math.round(seg.value/totalExpense*100);
+      html += '<div class="legend-row"><span class="legend-dot" style="background:'+seg.color+'"></span><span class="legend-name">'+catLabel(seg.key)+'</span><span class="legend-pct">'+pct+'%</span><span class="legend-amt">'+fmt(seg.value)+'</span></div>';
+    });
+    html += '</div></div>';
+  }
+
+  html += '<h3 class="section-title" onclick="cycleTrendPeriod()" style="cursor:pointer;">'+t("monthly_trend")+' '+ic("chevronDown",14)+'</h3>';
+  html += '<p class="swipe-hint">'+t("tap_to_change_period")+' ('+t("period_"+state.trendPeriod)+')</p>';
+  const buckets = getTrendBuckets(state.trendPeriod);
+  html += '<div class="trend-card"><div class="trend-legend"><span><span class="legend-dot" style="background:#34D399"></span>'+t("total_income")+'</span><span><span class="legend-dot" style="background:#F87171"></span>'+t("total_expense")+'</span></div>';
+  html += buildTrendSVG(buckets) + '</div>';
+
+  if(periodIncome.length){
+    html += '<h3 class="section-title">'+t("recent_income")+'</h3>';
+    periodIncome.slice(0,8).forEach(function(inc){
+      const src = INCOME_SOURCES.find(function(s){ return s.key===inc.source; }) || INCOME_SOURCES[INCOME_SOURCES.length-1];
+      html += '<div class="tx-wrap"><button class="tx-delete-btn" onclick="deleteIncome(\''+inc.id+'\')">'+ic("trash",16)+'<span>'+t("delete_word")+'</span></button>';
+      html += '<div class="tx-row" data-id="'+inc.id+'" data-kind="income">';
+      html += '<div class="ic-wrap" style="background:'+src.color+'1c;color:'+src.color+'">'+ic(src.icon,15)+'</div>';
+      html += '<div><div class="tx-title">'+t(src.tKey)+'</div><div class="tx-sub">'+inc.date+(inc.note?" · "+inc.note:"")+'</div></div>';
+      html += '<div class="tx-amt" style="color:#34D399">+'+fmt(inc.amount)+'</div></div></div>';
+    });
+  }
+
+  document.getElementById("reportsTab").innerHTML = html;
+  attachSwipeHandlers();
+}
+function setReportsPeriod(p){ state.reportsPeriod = p; renderReports(); }
+function cycleTrendPeriod(){
+  const order = ["weekly","monthly","yearly"];
+  const idx = order.indexOf(state.trendPeriod);
+  state.trendPeriod = order[(idx+1)%order.length];
+  renderReports();
+}
+
+/* ================= ADD EXPENSE ================= */
+function renderAddForm(){
+  let html = '<div class="type-toggle" style="margin-bottom:16px;">';
+  html += '<button class="'+(state.addMode==="expense"?"active-got":"")+'" onclick="setAddMode(\'expense\')">'+t("expense_tab")+'</button>';
+  html += '<button class="'+(state.addMode==="income"?"active-give":"")+'" onclick="setAddMode(\'income\')">'+t("income_tab")+'</button>';
+  html += '</div>';
+  if(state.addMode === "income"){ html += renderIncomeFormHtml(); }
+  else { html += renderExpenseFormHtml(); }
+  document.getElementById("addTab").innerHTML = html;
+  if(state.addMode === "income"){
+    document.getElementById("saveIncomeBtn").onclick = submitIncome;
+  } else {
+    document.getElementById("saveTxBtn").onclick = submitTx;
+    document.getElementById("noteInput").oninput = handleNoteSuggest;
+  }
+}
+function setAddMode(mode){ state.addMode = mode; renderAddForm(); }
+function renderExpenseFormHtml(){
+  let html = '<h3 class="section-title">'+t("what_expense")+'</h3><div class="hscroll">';
+  Object.entries(MAIN_CATS).forEach(function(entry){
+    const key = entry[0]; const cfg = entry[1]; const active = state.addMain===key;
+    html += '<button class="main-card '+(active?"active":"")+'" style="border-color:'+(active?cfg.color:"var(--border)")+';background:'+(active?cfg.color+"12":"var(--card)")+'" onclick="pickMain(\''+key+'\')"><span class="ic-wrap" style="background:'+cfg.color+'1c;color:'+cfg.color+'">'+ic(cfg.icon,16)+'</span>'+catLabel(key)+'</button>';
+  });
+  html += '</div><h3 class="section-title">'+t("choose_type")+'</h3><div class="sub-wrap">';
+  MAIN_CATS[state.addMain].subs.forEach(function(s){
+    const active = state.addSub===s;
+    html += '<button class="chip '+(active?"active":"")+'" onclick="pickSub(\''+s.replace(/'/g,"\\'")+'\')">'+subLabel(s)+'</button>';
+  });
+  html += '</div><div class="form-card">';
+  html += '<label class="field-label">'+t("amount_label")+' (\u20B9)</label><input type="number" inputmode="decimal" id="amountInput" placeholder="0" />';
+  html += '<label class="field-label">'+t("date_label")+'</label><input type="date" id="dateInput" value="'+todayStr()+'" />';
+  html += '<label class="field-label">'+t("note_label")+'</label><input type="text" id="noteInput" placeholder="'+t("note_ph")+'" />';
+  html += '<div id="suggestSlot"></div><button class="save-btn" id="saveTxBtn">'+t("save_entry")+'</button></div>';
+  return html;
+}
+function renderIncomeFormHtml(){
+  let html = '<h3 class="section-title">'+t("add_income")+'</h3><div class="hscroll">';
+  INCOME_SOURCES.forEach(function(src){
+    const active = state.incomeSource===src.key;
+    html += '<button class="main-card '+(active?"active":"")+'" style="border-color:'+(active?src.color:"var(--border)")+';background:'+(active?src.color+"12":"var(--card)")+'" onclick="pickIncomeSource(\''+src.key+'\')"><span class="ic-wrap" style="background:'+src.color+'1c;color:'+src.color+'">'+ic(src.icon,16)+'</span>'+t(src.tKey)+'</button>';
+  });
+  html += '</div><div class="form-card">';
+  html += '<label class="field-label">'+t("amount_label")+' (\u20B9)</label><input type="number" inputmode="decimal" id="incAmountInput" placeholder="0" />';
+  html += '<label class="field-label">'+t("date_label")+'</label><input type="date" id="incDateInput" value="'+todayStr()+'" />';
+  html += '<label class="field-label">'+t("note_label")+'</label><input type="text" id="incNoteInput" placeholder="'+t("note_ph")+'" />';
+  html += '<button class="save-btn" id="saveIncomeBtn" style="background:var(--green)">'+t("save_entry")+'</button></div>';
+  return html;
+}
+function pickIncomeSource(key){ state.incomeSource = key; renderAddForm(); }
+function submitIncome(){
+  const amount = Number(document.getElementById("incAmountInput").value);
+  const date = document.getElementById("incDateInput").value || todayStr();
+  const note = document.getElementById("incNoteInput").value.trim();
+  if(!amount || amount<=0) return;
+  income.unshift({ id: uid(), source: state.incomeSource, amount: amount, date: date, note: note });
+  saveIncome(income);
+  const btn = document.getElementById("saveIncomeBtn");
+  btn.textContent = t("saved_text");
+  setTimeout(function(){ if(btn) btn.textContent = t("save_entry"); }, 1000);
+  document.getElementById("incAmountInput").value = ""; document.getElementById("incNoteInput").value = "";
+}
+function deleteIncome(id){
+  if(!confirm(t("confirm_delete_entry"))) return;
+  income = income.filter(function(i){ return i.id !== id; });
+  saveIncome(income);
+  renderReports();
+}
+function handleNoteSuggest(e){
+  const text = e.target.value.toLowerCase(); const slot = document.getElementById("suggestSlot");
+  if(!text.trim()){ slot.innerHTML = ""; return; }
+  const match = KEYWORD_MAP.find(function(k){ return k.words.some(function(w){ return text.indexOf(w) !== -1; }); });
+  if(match && (match.main !== state.addMain || match.sub !== state.addSub)){
+    slot.innerHTML = '<div class="suggest-chip" onclick="applySuggestion(\''+match.main+'\',\''+match.sub.replace(/'/g,"\\'")+'\')">'+ic("sparkle",13)+' '+t("suggest_text")+' <b>&nbsp;'+subLabel(match.sub)+'&nbsp;</b> — '+t("tap_to_use")+'</div>';
+  } else { slot.innerHTML = ""; }
+}
+function applySuggestion(main, sub){ state.addMain=main; state.addSub=sub; const n=document.getElementById("noteInput"); const v=n?n.value:""; renderAddForm(); document.getElementById("noteInput").value=v; }
+function pickMain(key){ state.addMain=key; state.addSub=MAIN_CATS[key].subs[0]; const n=document.getElementById("noteInput"); const v=n?n.value:""; renderAddForm(); document.getElementById("noteInput").value=v; }
+function pickSub(sub){ state.addSub=sub; const n=document.getElementById("noteInput"); const v=n?n.value:""; renderAddForm(); document.getElementById("noteInput").value=v; }
+function submitTx(){
+  const amount = Number(document.getElementById("amountInput").value);
+  const date = document.getElementById("dateInput").value || todayStr();
+  const note = document.getElementById("noteInput").value.trim();
+  if(!amount || amount<=0) return;
+  transactions.unshift({ id: uid(), main: state.addMain, sub: state.addSub, amount: amount, date: date, note: note });
+  saveTx(transactions);
+  const btn = document.getElementById("saveTxBtn");
+  btn.innerHTML = t("saved_text")+" "+ic("check",14); btn.classList.add("success");
+  setTimeout(function(){ if(btn){ btn.textContent=t("save_entry"); btn.classList.remove("success"); } }, 1200);
+  document.getElementById("amountInput").value=""; document.getElementById("noteInput").value=""; document.getElementById("suggestSlot").innerHTML="";
+}
+
+/* ================= LOAN LEDGER ================= */
+function renderUdhar(){
+  if(state.udharView === "contact" && state.activeContactId){ renderContactPage(); return; }
+  renderContactList();
+}
+function renderContactList(){
+  let totalGet=0, totalGive=0;
+  contacts.forEach(function(c){ const bal=contactBalance(c); if(bal>0) totalGet+=bal; else totalGive+=-bal; });
+  let html = '<h3 class="section-title">'+t("loan_ledger")+'</h3><div class="loan-summary-grid">';
+  html += '<div class="loan-summary-card" style="border-color:#16A34A"><div class="loan-summary-label">'+t("will_get")+'</div><div class="loan-summary-amt" style="color:#16A34A">'+fmt(totalGet)+'</div></div>';
+  html += '<div class="loan-summary-card" style="border-color:#DC2626"><div class="loan-summary-label">'+t("will_give")+'</div><div class="loan-summary-amt" style="color:#DC2626">'+fmt(totalGive)+'</div></div></div>';
+  html += '<div class="form-card"><label class="field-label">'+t("add_contact")+'</label><input type="text" id="newContactName" placeholder="'+t("name_ph")+'" />';
+  html += '<label class="field-label">'+t("phone_label")+'</label><input type="tel" id="newContactPhone" placeholder="'+t("phone_ph")+'" />';
+  html += '<button class="pick-contact-btn" id="pickContactBtn">'+ic("user",14)+' '+t("pick_contacts")+'</button>';
+  html += '<button class="save-btn" id="addContactBtn">'+t("add_contact_btn")+'</button></div>';
+  html += '<h3 class="section-title">'+t("all_contacts")+'</h3>';
+  html += '<div class="search-wrap">'+ic("search",15)+'<input type="text" id="contactSearchInput" placeholder="'+t("search_contacts_ph")+'" value="'+state.contactSearch.replace(/"/g,"&quot;")+'" /></div>';
+  html += '<div id="contactsListContainer"></div>';
+  document.getElementById("udharTab").innerHTML = html;
+  document.getElementById("addContactBtn").onclick = function(){
+    const name = document.getElementById("newContactName").value.trim();
+    const phone = document.getElementById("newContactPhone").value.trim();
+    if(!name) return;
+    contacts.unshift({ id: uid(), name: name, phone: phone, entries: [] });
+    saveContacts(contacts); renderContactList();
+  };
+  document.getElementById("pickContactBtn").onclick = pickPhoneContact;
+  document.getElementById("contactSearchInput").oninput = function(e){ state.contactSearch = e.target.value; renderContactsList(); };
+  renderContactsList();
+}
+function renderContactsList(){
+  const container = document.getElementById("contactsListContainer");
+  const q = state.contactSearch.trim().toLowerCase();
+  const filtered = q ? contacts.filter(function(c){ return c.name.toLowerCase().indexOf(q)!==-1; }) : contacts;
+  let html = "";
+  if(contacts.length === 0){ html = '<div class="empty-note">'+t("no_contacts")+'</div>'; }
+  else if(filtered.length === 0){ html = '<div class="empty-note">'+t("no_search_results")+'</div>'; }
+  else {
+    filtered.forEach(function(c){
+      const bal = contactBalance(c); const initial = c.name.trim().charAt(0).toUpperCase();
+      html += '<div class="contact-row" onclick="openContact(\''+c.id+'\')"><div class="contact-avatar">'+initial+'</div>';
+      html += '<div><div class="contact-name">'+c.name+'</div><div class="contact-meta">'+c.entries.length+' '+t("entries_word")+'</div></div><div class="contact-balance">';
+      if(bal>0){ html += '<div class="amt" style="color:#16A34A">'+fmt(bal)+'</div><div class="lbl" style="color:#16A34A">'+t("will_get_short")+'</div>'; }
+      else if(bal<0){ html += '<div class="amt" style="color:#DC2626">'+fmt(-bal)+'</div><div class="lbl" style="color:#DC2626">'+t("will_give_short")+'</div>'; }
+      else { html += '<div class="amt" style="color:var(--muted)">'+fmt(0)+'</div><div class="lbl" style="color:var(--muted)">'+t("settled")+'</div>'; }
+      html += '</div></div>';
+    });
+  }
+  container.innerHTML = html;
+}
+async function pickPhoneContact(){
+  if(!("contacts" in navigator) || !("ContactsManager" in window)){
+    alert("Contact access isn't supported in this browser. It works on Chrome for Android. Please type the name and number manually for now.");
+    return;
+  }
+  try{
+    const selected = await navigator.contacts.select(["name","tel"], { multiple:false });
+    if(selected && selected.length){
+      const person = selected[0];
+      if(person.name && person.name.length) document.getElementById("newContactName").value = person.name[0];
+      if(person.tel && person.tel.length) document.getElementById("newContactPhone").value = person.tel[0].replace(/[^0-9]/g,"");
+    }
+  } catch(e){}
+}
+function openContact(id){ state.udharView="contact"; state.activeContactId=id; state.entryKind="give"; state.showEntryForm=false; renderUdhar(); }
+function backToContactList(){ state.udharView="list"; state.activeContactId=null; renderUdhar(); }
+function renderContactPage(){
+  const c = contacts.find(function(c2){ return c2.id === state.activeContactId; });
+  if(!c){ backToContactList(); return; }
+  const bal = contactBalance(c);
+  const initial = c.name.trim().charAt(0).toUpperCase();
+  let totalGave=0, totalGot=0;
+  c.entries.forEach(function(e){ if(e.kind==="give") totalGave+=Number(e.amount); else totalGot+=Number(e.amount); });
+
+  let html = '<div class="back-row"><button class="back-btn" onclick="backToContactList()">'+ic("arrowLeft",16)+'</button><div style="font-weight:700;font-size:14.5px;">'+c.name+t("khata_of")+'</div></div>';
+
+  html += '<div class="contact-header-card">';
+  html += '<div class="contact-avatar-lg">'+initial+'</div>';
+  html += '<div class="contact-header-name">'+c.name+'</div>';
+  if(bal>0){ html += '<div class="contact-header-lbl-top">'+t("they_pay_you")+'</div><div class="contact-header-bal" style="color:#34D399">'+fmt(bal)+'</div>'; }
+  else if(bal<0){ html += '<div class="contact-header-lbl-top">'+t("you_pay_them")+'</div><div class="contact-header-bal" style="color:#F87171">'+fmt(-bal)+'</div>'; }
+  else { html += '<div class="contact-header-lbl-top">'+t("all_settled")+'</div><div class="contact-header-bal" style="color:#C7C2DB">'+fmt(0)+'</div>'; }
+  html += '<button class="add-transaction-btn" onclick="toggleEntryForm()">'+ic("plus",16)+' '+t("add_transaction")+'</button>';
+  html += '<button class="wa-btn" onclick="sendWhatsApp(\''+c.id+'\')">'+ic("chat",15)+' '+t("send_whatsapp")+'</button>';
+  html += '<div class="khata-summary-footer">';
+  html += '<div class="ksf-item"><div class="ksf-label">'+t("ksf_total")+'</div><div class="ksf-val">'+c.entries.length+'</div></div>';
+  html += '<div class="ksf-item"><div class="ksf-label">'+t("you_gave")+'</div><div class="ksf-val" style="color:#34D399">'+fmt(totalGave)+'</div></div>';
+  html += '<div class="ksf-item"><div class="ksf-label">'+t("you_got")+'</div><div class="ksf-val" style="color:#F87171">'+fmt(totalGot)+'</div></div>';
+  html += '</div></div>';
+
+  if(state.showEntryForm){
+    html += '<div class="form-card"><div class="type-toggle">';
+    html += '<button class="'+(state.entryKind==="give"?"active-give":"")+'" onclick="setEntryKind(\'give\')">'+t("you_gave")+'</button>';
+    html += '<button class="'+(state.entryKind==="got"?"active-got":"")+'" onclick="setEntryKind(\'got\')">'+t("you_got")+'</button></div>';
+    html += '<label class="field-label">'+t("amount_label")+' (\u20B9)</label><input type="number" inputmode="decimal" id="entryAmount" placeholder="0" />';
+    html += '<label class="field-label">'+t("date_label").split(" (")[0]+'</label><input type="date" id="entryDate" value="'+todayStr()+'" />';
+    html += '<label class="field-label">'+t("note_label")+'</label><input type="text" id="entryNote" placeholder="e.g. for shop stock" />';
+    html += '<button class="save-btn" id="saveEntryBtn" style="background:'+(state.entryKind==="give"?"#16A34A":"#DC2626")+'">'+t("save_entry")+'</button></div>';
+  }
+
+  html += '<h3 class="section-title">'+t("history_title")+'</h3>';
+  if(c.entries.length === 0){ html += '<div class="empty-note">'+t("no_entries_contact")+' '+c.name+'.</div>'; }
+  else {
+    const sorted = c.entries.slice().sort(function(a,b){ return a.date<b.date?-1:1; });
+    let running=0; const withRunning = sorted.map(function(e){ running += (e.kind==="give"?Number(e.amount):-Number(e.amount)); return { e:e, running:running }; });
+    withRunning.reverse().forEach(function(item){
+      const e=item.e; const isGive = e.kind==="give";
+      html += '<div class="tx-wrap"><button class="tx-delete-btn" onclick="deleteEntry(\''+c.id+'\',\''+e.id+'\')">'+ic("trash",16)+'<span>'+t("delete_word")+'</span></button>';
+      html += '<div class="tx-row" data-id="'+e.id+'" data-kind="entry">';
+      html += '<span class="entry-kind-tag" style="background:'+(isGive?"#16A34A22":"#DC262622")+';color:'+(isGive?"#16A34A":"#DC2626")+'">'+(isGive?t("you_gave"):t("you_got"))+'</span>';
+      html += '<div><div class="tx-title">'+fmt(e.amount)+'</div><div class="tx-sub">'+e.date+(e.note?" · "+e.note:"")+'</div><div class="running-bal">'+t("balance_after")+': '+fmt(item.running)+'</div></div>';
+      html += '</div></div>';
+    });
+  }
+  document.getElementById("udharTab").innerHTML = html;
+  if(state.showEntryForm){ document.getElementById("saveEntryBtn").onclick = submitEntry; }
+  attachSwipeHandlers();
+}
+function toggleEntryForm(){ state.showEntryForm = !state.showEntryForm; renderContactPage(); }
+function setEntryKind(kind){ state.entryKind=kind; renderContactPage(); }
+function submitEntry(){
+  const c = contacts.find(function(c2){ return c2.id === state.activeContactId; }); if(!c) return;
+  const amount = Number(document.getElementById("entryAmount").value);
+  const date = document.getElementById("entryDate").value || todayStr();
+  const note = document.getElementById("entryNote").value.trim();
+  if(!amount || amount<=0) return;
+  c.entries.push({ id: uid(), kind: state.entryKind, amount: amount, date: date, note: note });
+  saveContacts(contacts);
+  state.showEntryForm = false;
+  renderContactPage();
+}
+function deleteEntry(contactId, entryId){
+  if(!confirm(t("confirm_delete_entry"))) return;
+  const c = contacts.find(function(c2){ return c2.id === contactId; }); if(!c) return;
+  c.entries = c.entries.filter(function(e){ return e.id !== entryId; });
+  state.openSwipeId = null;
+  saveContacts(contacts); renderContactPage();
+}
+function sendWhatsApp(contactId){
+  const c = contacts.find(function(c2){ return c2.id === contactId; }); if(!c) return;
+  const bal = contactBalance(c); let msg="";
+  if(bal>0){ msg = "Namaste " + c.name + ", hamare hisaab ke mutabik aapko mera " + fmt(bal) + " dena hai. Kripya jab suvidha ho tab clear kar dijiye. Dhanyawad!"; }
+  else if(bal<0){ msg = "Namaste " + c.name + ", hamare hisaab ke mutabik mujhe aapka " + fmt(-bal) + " dena hai. Bata dijiyega kab de saku. Dhanyawad!"; }
+  else { msg = "Namaste " + c.name + ", hamara hisaab poora settled hai. Dhanyawad!"; }
+  const encoded = encodeURIComponent(msg);
+  let phone = (c.phone || "").replace(/[^0-9]/g, ""); let url = "";
+  if(phone.length >= 10){ if(phone.length===10) phone = "91"+phone; url = "https://wa.me/"+phone+"?text="+encoded; }
+  else { url = "https://wa.me/?text="+encoded; }
+  window.open(url, "_blank");
+}
+
+/* ================= RENDER ORCHESTRATION ================= */
+function renderAll(){
+  refreshStaticText();
+  if(state.tab==="dashboard") renderDashboard();
+  if(state.tab==="reports") renderReports();
+  if(state.tab==="add") renderAddForm();
+  if(state.tab==="udhar") renderUdhar();
+}
+mountStaticIcons();
+renderAll();
+checkLock();
+
+/* ================= PWA INSTALL ================= */
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferredPrompt=e; document.getElementById("installBanner").style.display="flex"; });
+document.getElementById("installBtn").onclick = async function(){ if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; document.getElementById("installBanner").style.display="none"; };
+window.addEventListener("appinstalled", function(){ document.getElementById("installBanner").style.display="none"; });
+
+/* ================= SERVICE WORKER ================= */
+if("serviceWorker" in navigator){ window.addEventListener("load", function(){ navigator.serviceWorker.register("service-worker.js").catch(function(){}); }); }
+</script>
+</body>
+</html>
